@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PWA -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#e94560">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="KS Production">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/icons/favicon-16x16.png">
+    <title>Nouvelle Facture — KS Production</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root { --ks-primary: #1a1a2e; --ks-accent: #e94560; }
+        body  { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
+
+        .sidebar {
+            width: 240px; min-height: 100vh; background: var(--ks-primary);
+            position: fixed; left: 0; top: 0; padding-top: 20px; z-index: 100;
+        }
+        .sidebar .brand { color: #fff; font-size: 1.2rem; font-weight: 700; padding: 10px 20px 20px; border-bottom: 1px solid #ffffff22; }
+        .sidebar .brand span { color: var(--ks-accent); }
+        .sidebar .nav-link { color: #aab4c4; padding: 10px 20px; display: flex; align-items: center; gap: 10px; transition: all .2s; }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active { color: #fff; background: var(--ks-accent); border-radius: 8px; margin: 0 8px; }
+
+        .main-content { margin-left: 240px; padding: 25px; }
+
+        .topbar {
+            background: #fff; border-radius: 12px; padding: 12px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 25px; box-shadow: 0 2px 8px #0001;
+        }
+        .topbar h5 { margin: 0; font-weight: 700; color: var(--ks-primary); }
+
+        .form-card { background: #fff; border-radius: 14px; padding: 25px 30px; box-shadow: 0 2px 10px #0001; margin-bottom: 20px; }
+        .section-title {
+            font-size: .78rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .08em; color: var(--ks-accent);
+            margin-bottom: 16px; padding-bottom: 8px;
+            border-bottom: 2px solid #fdecea;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .form-label { font-weight: 600; color: #444; font-size: .88rem; }
+        .form-control, .form-select { border-radius: 8px; border: 1.5px solid #e0e0e0; padding: 9px 13px; transition: border-color .2s; font-size: .88rem; }
+        .form-control:focus, .form-select:focus { border-color: var(--ks-accent); box-shadow: 0 0 0 3px #e9456022; }
+
+        /* BLOC PARTIEL */
+        .bloc-partiel { background: #fff8e1; border: 1.5px solid #ffc107; border-radius: 10px; padding: 14px 16px; margin-top: 12px; display: none; }
+        .bloc-partiel.visible { display: block; }
+        .bloc-partiel .part-label { font-size: .75rem; font-weight: 700; color: #856404; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; }
+
+        /* TABLE LIGNES */
+        .lignes-table { width: 100%; border-collapse: collapse; }
+        .lignes-table thead tr { background: var(--ks-primary); color: #fff; }
+        .lignes-table thead th { padding: 10px 12px; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+        .lignes-table tbody tr { border-bottom: 1px solid #f0f0f0; }
+        .lignes-table tbody td { padding: 8px 8px; vertical-align: middle; }
+        .lignes-table .form-control { border-radius: 6px; padding: 7px 10px; font-size: .84rem; border: 1.5px solid #e0e0e0; }
+
+        .btn-add-ligne { background: #e8f5e9; color: #00b894; border: 1.5px dashed #00b894; border-radius: 8px; padding: 9px 18px; font-size: .85rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all .2s; }
+        .btn-add-ligne:hover { background: #00b894; color: #fff; }
+        .btn-del-ligne { background: #fdecea; color: #d63031; border: none; border-radius: 6px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1rem; transition: all .2s; }
+        .btn-del-ligne:hover { background: #d63031; color: #fff; }
+
+        /* RECAP */
+        .recap-box { background: #f8f9fa; border-radius: 10px; padding: 16px 20px; border-left: 4px solid var(--ks-accent); }
+        .recap-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: .88rem; }
+        .recap-row .lbl { color: #6c757d; }
+        .recap-row .val { font-weight: 600; color: var(--ks-primary); }
+        .recap-row.total { border-top: 1.5px solid #dee2e6; margin-top: 6px; padding-top: 10px; font-size: 1rem; }
+        .recap-row.total .val { color: var(--ks-accent); font-size: 1.1rem; }
+        .recap-row.partiel-row .val { color: #856404; }
+        .recap-row.reste-row .val  { color: #d63031; }
+
+        .btn-ks { background: var(--ks-accent); border: none; color: #fff; }
+        .btn-ks:hover { background: #c0392b; color: #fff; }
+
+        .svc-suggestions { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0 4px; }
+        .svc-chip { background: #f0f2f5; border: 1px solid #dee2e6; border-radius: 20px; padding: 3px 10px; font-size: .75rem; cursor: pointer; transition: all .15s; color: #444; }
+        .svc-chip:hover { background: var(--ks-primary); color: #fff; border-color: var(--ks-primary); }
+
+        
+        /* ── RESPONSIVE MOBILE ── */
+        .hamburger-btn {
+            display: none; position: fixed; top: 12px; left: 12px; z-index: 200;
+            background: var(--ks-accent, #e94560); color: #fff; border: none;
+            border-radius: 10px; width: 40px; height: 40px; font-size: 1.1rem;
+            cursor: pointer; align-items: center; justify-content: center;
+            box-shadow: 0 3px 12px rgba(233,69,96,.4); transition: all .2s;
+        }
+        .hamburger-btn:hover { background: #c0392b; }
+        .sidebar-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,.5); z-index: 150; backdrop-filter: blur(2px);
+        }
+        .sidebar-overlay.active { display: block; }
+        @media (max-width: 768px) {
+            .hamburger-btn { display: flex; }
+            .sidebar { transform: translateX(-100%); transition: transform .3s ease; z-index: 160; width: 240px !important; }
+            .sidebar.open { transform: translateX(0); }
+            .main-content, .main { margin-left: 0 !important; padding: 12px !important; padding-top: 60px !important; }
+            .topbar { flex-wrap: wrap; gap: 8px; padding: 10px 12px 10px 60px !important; }
+            .topbar h5 { font-size: .85rem !important; }
+            .table-responsive { overflow-x: auto; }
+            .fac-table, .rel-table, .ops-table, .pai-table { min-width: 700px; }
+            .stats-row { flex-direction: column; }
+            .stat-mini { min-width: unset !important; }
+            .hide-mobile { display: none !important; }
+            .client-grid { grid-template-columns: 1fr !important; }
+            .cal-cell { min-height: 60px !important; }
+            .filter-bar { flex-wrap: wrap; gap: 8px !important; }
+            .filter-bar .form-select, .filter-bar .form-control { width: 100% !important; }
+            .modal-dialog { margin: 8px !important; max-width: calc(100vw - 16px) !important; }
+            .modal-body { max-height: 70vh; overflow-y: auto; }
+            .row.g-3 > .col-md-3, .row.g-3 > .col-md-4,
+            .row.g-2 > .col-md-4, .row.g-2 > .col-md-7,
+            .row.g-2 > .col-md-5, .row.g-2 > .col-md-8 { flex: 0 0 100%; max-width: 100%; }
+        }
+        @media (max-width: 480px) {
+            .topbar .d-flex { flex-wrap: wrap; }
+            .stat-card .val { font-size: .95rem !important; }
+        } }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="brand">🎵 KS <span>Production</span><small>Nouvelle facture</small></div>
+    <nav>
+        <div class="nav-section">Menu</div>
+        <a href="/dashboard" class="nav-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        <a href="/factures" class="nav-link active"><i class="bi bi-receipt"></i> Factures</a>
+        <a href="/proformas" class="nav-link"><i class="bi bi-file-earmark-text"></i> Proformas</a>
+        <a href="/agenda" class="nav-link"><i class="bi bi-calendar3"></i> Agenda</a>
+        <a href="/operations" class="nav-link"><i class="bi bi-arrow-left-right"></i> Opérations</a>
+        <a href="/clients" class="nav-link"><i class="bi bi-people"></i> Clients</a>
+        <div class="nav-section">Finance</div>
+        <a href="/paiements" class="nav-link"><i class="bi bi-clock-history"></i> Paiements</a>
+        <a href="/relances" class="nav-link"><i class="bi bi-bell-fill"></i> Relances</a>
+        <a href="/rapport" class="nav-link"><i class="bi bi-bar-chart-line"></i> Rapport</a>
+        {% if role == 'Administrateur' %}
+        <div class="nav-section">Admin</div>
+        <a href="/services" class="nav-link"><i class="bi bi-grid"></i> Services</a>
+        <a href="/utilisateurs" class="nav-link"><i class="bi bi-person-gear"></i> Utilisateurs</a>
+        <a href="/parametres" class="nav-link"><i class="bi bi-gear"></i> Paramètres</a>
+        <a href="/sauvegarde" class="nav-link"><i class="bi bi-cloud-arrow-down"></i> Sauvegarde</a>
+        <a href="/reinitialiser" class="nav-link" style="color:#e74c3c;"><i class="bi bi-arrow-counterclockwise"></i> Réinitialiser</a>
+        {% endif %}
+    </nav>
+    <div class="sidebar-footer">
+        <a href="/profil" class="nav-link"><i class="bi bi-person-circle"></i> Mon Profil</a>
+        <a href="/logout" class="nav-link" style="color:#e74c3c;"><i class="bi bi-box-arrow-left"></i> Déconnexion</a>
+    </div>
+</div>
+
+<button class="hamburger-btn" onclick="toggleSidebar()" id="hamburgerBtn">
+    <i class="bi bi-list" id="hamburgerIcon"></i>
+</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+
+<!-- MAIN -->
+<div class="main-content">
+
+    <div class="topbar">
+        <div>
+            <h5><i class="bi bi-plus-circle me-2" style="color:var(--ks-accent);"></i>Nouvelle Facture</h5>
+            <small class="text-muted">Créer une facture avec une ou plusieurs lignes</small>
+        </div>
+        <a href="/factures" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Retour
+        </a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show mb-3">
+            {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endwith %}
+
+    <form method="POST" action="/factures/nouvelle" id="formFacture">
+
+        <!-- INFOS GÉNÉRALES -->
+        <div class="form-card">
+            <div class="section-title"><i class="bi bi-info-circle"></i> Informations générales</div>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">N° Facture</label>
+                    <input type="text" class="form-control" name="numero"
+                           value="{{ numero_auto }}" readonly
+                           style="background:#f8f9fa; font-weight:600; color:var(--ks-accent);">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Date</label>
+                    <input type="date" class="form-control" name="date" value="{{ today }}">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Section <span class="text-danger">*</span></label>
+                    <select class="form-select" name="section" required>
+                        <option value="">-- Choisir --</option>
+                        <option value="Studio">Studio</option>
+                        <option value="Sonorisation">Sonorisation</option>
+                        <option value="Général">Général</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Client <span class="text-danger">*</span></label>
+                    <div class="d-flex gap-2">
+                        <select class="form-select" id="selectClient" onchange="remplirClient()">
+                            <option value="">-- Client existant --</option>
+                            {% for client in clients %}
+                            <option value="{{ client.nom }}">{{ client.nom }}</option>
+                            {% endfor %}
+                        </select>
+                        <input type="text" class="form-control" name="nom_client"
+                               id="nom_client" placeholder="Ou saisir..." required>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">TVA</label>
+                    <select class="form-select" name="tva_taux" id="tvaTaux" onchange="updateRecap()">
+                        <option value="18">TVA 18%</option>
+                        <option value="0">Sans TVA (0%)</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Mode paiement</label>
+                    <select class="form-select" name="mode_paiement">
+                        <option value="Espece">Espèce</option>
+                        <option value="Carte Bancaire">Carte Bancaire</option>
+                        <option value="Virement">Virement</option>
+                        <option value="Mobile Money">Mobile Money</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">État paiement</label>
+                    <select class="form-select" name="etat_paiement" id="etatPaiement"
+                            onchange="togglePartiel(); updateRecap();">
+                        <option value="Payer">Payée</option>
+                        <option value="Non Payer">Non Payée</option>
+                        <option value="Partiel">Paiement Partiel</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- BLOC MONTANT PARTIEL -->
+            <div class="bloc-partiel" id="blocPartiel">
+                <div class="part-label"><i class="bi bi-cash-coin me-2"></i>Montant avancé par le client</div>
+                <div class="row g-3">
+                    <div class="col-md-5">
+                        <label class="form-label">Montant déjà encaissé (FCFA) <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text" style="background:#fff8e1; border-color:#ffc107;">
+                                <i class="bi bi-cash-coin" style="color:#856404;"></i>
+                            </span>
+                            <input type="number" class="form-control" name="montant_avance"
+                                   id="montantAvance" placeholder="Ex: 50000"
+                                   min="0" step="any" oninput="updateRecap()"
+                                   style="border-color:#ffc107;">
+                            <span class="input-group-text" style="background:#fff8e1; border-color:#ffc107; color:#856404; font-weight:600;">FCFA</span>
+                        </div>
+                        <small class="text-muted">Laissez vide si aucun montant n'a encore été versé</small>
+                    </div>
+                    <div class="col-md-7 d-flex align-items-end">
+                        <div style="background:#fff3cd; border-radius:8px; padding:10px 14px; font-size:.82rem; color:#856404; width:100%;">
+                            <i class="bi bi-info-circle me-1"></i>
+                            Le reste dû sera calculé automatiquement dans le récapitulatif.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LIGNES DE SERVICES -->
+        <div class="form-card">
+            <div class="section-title"><i class="bi bi-list-ul"></i> Lignes de services</div>
+            <div class="svc-suggestions mb-3">
+                {% for svc in services_list %}
+                <span class="svc-chip" onclick="ajouterLigneRapide('{{ svc.libelle }}', {{ svc.prix }})">
+                    + {{ svc.libelle }}
+                </span>
+                {% endfor %}
+            </div>
+            <div class="table-responsive">
+                <table class="lignes-table" id="lignesTable">
+                    <thead>
+                        <tr>
+                            <th style="width:42%;">Description du service</th>
+                            <th style="width:10%; text-align:center;">Qté</th>
+                            <th style="width:20%; text-align:right;">Prix unitaire HT (FCFA)</th>
+                            <th style="width:20%; text-align:right;">Total HT (FCFA)</th>
+                            <th style="width:8%; text-align:center;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="lignesBody">
+                        <tr class="ligne-row">
+                            <td><input type="text" class="form-control svc-input" name="service[]" placeholder="Ex: Sonorisation Mariage" required></td>
+                            <td><input type="number" class="form-control qty-input" name="quantite[]" value="1" min="1" style="text-align:center;"></td>
+                            <td><input type="number" class="form-control pu-input" name="prix_unitaire[]" placeholder="0" min="0" step="any" style="text-align:right;"></td>
+                            <td><input type="text" class="form-control total-input" placeholder="0" readonly style="text-align:right; background:#f8f9fa; font-weight:600;"></td>
+                            <td style="text-align:center;">
+                                <button type="button" class="btn-del-ligne" onclick="supprimerLigne(this)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-3">
+                <button type="button" class="btn-add-ligne" onclick="ajouterLigne()">
+                    <i class="bi bi-plus-circle"></i> Ajouter une ligne
+                </button>
+            </div>
+        </div>
+
+        <!-- RECAP + BOUTONS -->
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="form-card h-100">
+                    <div class="section-title"><i class="bi bi-sticky"></i> Notes (optionnel)</div>
+                    <textarea class="form-control" name="notes" rows="4"
+                              placeholder="Remarques, conditions particulières..."></textarea>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-card">
+                    <div class="section-title"><i class="bi bi-calculator"></i> Récapitulatif</div>
+                    <div class="recap-box">
+                        <div class="recap-row">
+                            <span class="lbl">Sous-total HT</span>
+                            <span class="val" id="recapHT">0 FCFA</span>
+                        </div>
+                        <div class="recap-row">
+                            <span class="lbl">TVA (<span id="tauxLabel">18</span>%)</span>
+                            <span class="val" id="recapTVA">0 FCFA</span>
+                        </div>
+                        <div class="recap-row total">
+                            <span class="lbl fw-bold">TOTAL TTC</span>
+                            <span class="val" id="recapTTC">0 FCFA</span>
+                        </div>
+                        <div class="recap-row partiel-row" id="rowAvance" style="display:none;">
+                            <span class="lbl">✓ Montant avancé</span>
+                            <span class="val" id="recapAvance">0 FCFA</span>
+                        </div>
+                        <div class="recap-row reste-row" id="rowReste" style="display:none;">
+                            <span class="lbl">⚠ Reste dû</span>
+                            <span class="val" id="recapReste">0 FCFA</span>
+                        </div>
+                        <div class="recap-row mt-2">
+                            <span class="lbl">Statut</span>
+                            <span class="badge bg-success" id="badgeStatut">Payée</span>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-3 mt-4">
+                        <button type="submit" class="btn btn-ks px-4 flex-fill">
+                            <i class="bi bi-check-lg me-2"></i>Enregistrer la facture
+                        </button>
+                        <a href="/factures" class="btn btn-outline-secondary px-3">
+                            <i class="bi bi-x-lg"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function remplirClient() {
+        const val = document.getElementById('selectClient').value;
+        if (val) document.getElementById('nom_client').value = val;
+    }
+
+    function formatNum(n) {
+        return n > 0 ? Math.round(n).toLocaleString('fr-FR') : '0';
+    }
+
+    function togglePartiel() {
+        const etat = document.getElementById('etatPaiement').value;
+        const bloc = document.getElementById('blocPartiel');
+        if (etat === 'Partiel') {
+            bloc.classList.add('visible');
+        } else {
+            bloc.classList.remove('visible');
+            document.getElementById('montantAvance').value = '';
+        }
+    }
+
+    function updateRecap() {
+        // ── Calcul correct : Prix saisi = HT, TTC = HT + TVA ──
+        const tvaRate = parseFloat(document.getElementById('tvaTaux').value) / 100 || 0;
+        document.getElementById('tauxLabel').textContent = document.getElementById('tvaTaux').value;
+
+        let totalHT = 0;
+
+        document.querySelectorAll('.ligne-row').forEach(row => {
+            const pu  = parseFloat(row.querySelector('.pu-input').value)  || 0;
+            const qty = parseInt(row.querySelector('.qty-input').value)   || 1;
+            const ht  = pu * qty;  // Prix unitaire HT × quantité
+            row.querySelector('.total-input').value = ht > 0 ? formatNum(ht) : '';
+            totalHT += ht;
+        });
+
+        const tva = totalHT * tvaRate;
+        const ttc = totalHT + tva;
+
+        document.getElementById('recapHT').textContent  = formatNum(totalHT) + ' FCFA';
+        document.getElementById('recapTVA').textContent = formatNum(tva)     + ' FCFA';
+        document.getElementById('recapTTC').textContent = formatNum(ttc)     + ' FCFA';
+
+        // Gestion paiement partiel
+        const etat      = document.getElementById('etatPaiement').value;
+        const avance    = parseFloat(document.getElementById('montantAvance')?.value) || 0;
+        const rowAvance = document.getElementById('rowAvance');
+        const rowReste  = document.getElementById('rowReste');
+
+        if (etat === 'Partiel' && avance > 0) {
+            const reste = ttc - avance;
+            rowAvance.style.display = 'flex';
+            rowReste.style.display  = 'flex';
+            document.getElementById('recapAvance').textContent = formatNum(avance)           + ' FCFA';
+            document.getElementById('recapReste').textContent  = formatNum(Math.max(0,reste)) + ' FCFA';
+        } else {
+            rowAvance.style.display = 'none';
+            rowReste.style.display  = 'none';
+        }
+
+        // Badge statut
+        const badge = document.getElementById('badgeStatut');
+        if (etat === 'Payer') {
+            badge.className = 'badge bg-success'; badge.textContent = 'Payée';
+        } else if (etat === 'Non Payer') {
+            badge.className = 'badge bg-danger'; badge.textContent = 'Non Payée';
+        } else {
+            badge.className = 'badge bg-warning text-dark'; badge.textContent = 'Paiement partiel';
+        }
+    }
+
+    function attachListeners(row) {
+        row.querySelector('.pu-input').addEventListener('input',  updateRecap);
+        row.querySelector('.qty-input').addEventListener('input', updateRecap);
+    }
+
+    function ajouterLigne(service = '', prix = 0) {
+        const tbody = document.getElementById('lignesBody');
+        const tr = document.createElement('tr');
+        tr.className = 'ligne-row';
+        tr.innerHTML = `
+            <td><input type="text" class="form-control svc-input" name="service[]" value="${service}" placeholder="Ex: Mixage" required></td>
+            <td><input type="number" class="form-control qty-input" name="quantite[]" value="1" min="1" style="text-align:center;"></td>
+            <td><input type="number" class="form-control pu-input" name="prix_unitaire[]" value="${prix}" min="0" step="any" style="text-align:right;"></td>
+            <td><input type="text" class="form-control total-input" value="${prix > 0 ? formatNum(prix) : ''}" readonly style="text-align:right; background:#f8f9fa; font-weight:600;"></td>
+            <td style="text-align:center;">
+                <button type="button" class="btn-del-ligne" onclick="supprimerLigne(this)">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </td>`;
+        tbody.appendChild(tr);
+        attachListeners(tr);
+        updateRecap();
+    }
+
+    function ajouterLigneRapide(service, prix) {
+        ajouterLigne(service, prix);
+    }
+
+    function supprimerLigne(btn) {
+        if (document.querySelectorAll('.ligne-row').length <= 1) {
+            alert('La facture doit avoir au moins une ligne.');
+            return;
+        }
+        btn.closest('tr').remove();
+        updateRecap();
+    }
+
+    // Init
+    document.querySelectorAll('.ligne-row').forEach(attachListeners);
+    updateRecap();
+</script>
+    <!-- Service Worker PWA -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(reg => console.log('SW enregistré:', reg.scope))
+            .catch(err => console.log('SW erreur:', err));
+        });
+      }
+    </script>
+</body>
+</html>

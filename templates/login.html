@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PWA -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#e94560">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="KS Production">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/icons/favicon-16x16.png">
+    <title>Connexion — KS Production</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root { --ks-primary: #1a1a2e; --ks-accent: #e94560; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        /* Fond animé */
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background: radial-gradient(ellipse at 20% 50%, rgba(233,69,96,.15) 0%, transparent 50%),
+                        radial-gradient(ellipse at 80% 20%, rgba(108,92,231,.15) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .login-wrapper {
+            width: 100%; max-width: 420px;
+            padding: 20px; position: relative; z-index: 1;
+        }
+
+        /* LOGO / MARQUE */
+        .brand-zone {
+            text-align: center; margin-bottom: 32px;
+        }
+        .brand-logo {
+            width: 72px; height: 72px; border-radius: 20px;
+            background: linear-gradient(135deg, var(--ks-accent), #6c5ce7);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; margin: 0 auto 16px; 
+            box-shadow: 0 8px 30px rgba(233,69,96,.4);
+        }
+        .brand-name {
+            font-size: 1.8rem; font-weight: 900; color: #fff;
+            letter-spacing: -.02em;
+        }
+        .brand-name span { color: var(--ks-accent); }
+        .brand-sub { font-size: .8rem; color: rgba(255,255,255,.5); margin-top: 4px; }
+
+        /* CARTE LOGIN */
+        .login-card {
+            background: rgba(255,255,255,.06);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,.1);
+            border-radius: 20px;
+            padding: 36px 32px;
+            box-shadow: 0 20px 60px rgba(0,0,0,.3);
+        }
+        .card-title {
+            font-size: 1rem; font-weight: 700; color: #fff;
+            margin-bottom: 6px;
+        }
+        .card-sub {
+            font-size: .78rem; color: rgba(255,255,255,.45);
+            margin-bottom: 28px;
+        }
+
+        /* FORMULAIRE */
+        .form-label {
+            font-size: .78rem; font-weight: 600;
+            color: rgba(255,255,255,.7); margin-bottom: 6px;
+        }
+        .input-group-text {
+            background: rgba(255,255,255,.08);
+            border: 1.5px solid rgba(255,255,255,.15);
+            border-right: none;
+            color: rgba(255,255,255,.5);
+        }
+        .form-control {
+            background: rgba(255,255,255,.08);
+            border: 1.5px solid rgba(255,255,255,.15);
+            border-left: none;
+            color: #fff;
+            padding: 11px 14px;
+            font-size: .88rem;
+            border-radius: 0 8px 8px 0 !important;
+        }
+        .form-control::placeholder { color: rgba(255,255,255,.25); }
+        .form-control:focus {
+            background: rgba(255,255,255,.12);
+            border-color: var(--ks-accent);
+            box-shadow: 0 0 0 3px rgba(233,69,96,.2);
+            color: #fff;
+            outline: none;
+        }
+        .input-group-text { border-radius: 8px 0 0 8px !important; }
+
+        /* TOGGLE MOT DE PASSE */
+        .toggle-pwd {
+            background: rgba(255,255,255,.08);
+            border: 1.5px solid rgba(255,255,255,.15);
+            border-left: none;
+            color: rgba(255,255,255,.5);
+            cursor: pointer;
+            border-radius: 0 8px 8px 0 !important;
+            padding: 0 14px;
+        }
+        .toggle-pwd:hover { color: #fff; }
+
+        /* BOUTON */
+        .btn-login {
+            width: 100%; padding: 13px;
+            background: linear-gradient(135deg, var(--ks-accent), #c0392b);
+            border: none; border-radius: 10px;
+            color: #fff; font-weight: 700; font-size: .95rem;
+            cursor: pointer; transition: all .2s;
+            margin-top: 8px;
+            box-shadow: 0 4px 15px rgba(233,69,96,.35);
+        }
+        .btn-login:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(233,69,96,.5);
+        }
+        .btn-login:active { transform: translateY(0); }
+
+        /* ALERTE ERREUR */
+        .alert-login {
+            background: rgba(214,48,49,.15);
+            border: 1px solid rgba(214,48,49,.4);
+            border-radius: 10px;
+            color: #ff8a8a;
+            padding: 10px 14px;
+            font-size: .82rem;
+            margin-bottom: 20px;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        /* FOOTER */
+        .login-footer {
+            text-align: center; margin-top: 24px;
+            font-size: .72rem; color: rgba(255,255,255,.25);
+        }
+        .login-footer strong { color: rgba(255,255,255,.4); }
+
+        /* COMPTES DÉMO */
+        .demo-accounts {
+            margin-top: 20px;
+            background: rgba(255,255,255,.04);
+            border: 1px solid rgba(255,255,255,.08);
+            border-radius: 12px;
+            padding: 14px 16px;
+        }
+        .demo-title {
+            font-size: .68rem; text-transform: uppercase;
+            letter-spacing: .1em; color: rgba(255,255,255,.3);
+            font-weight: 600; margin-bottom: 10px;
+        }
+        .demo-item {
+            display: flex; justify-content: space-between;
+            align-items: center; padding: 5px 0;
+            border-bottom: 1px solid rgba(255,255,255,.05);
+            font-size: .76rem;
+        }
+        .demo-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .demo-role { color: rgba(255,255,255,.5); }
+        .demo-creds {
+            font-family: monospace; color: rgba(255,255,255,.4);
+            font-size: .72rem; cursor: pointer;
+        }
+        .demo-creds:hover { color: var(--ks-accent); }
+    </style>
+</head>
+<body>
+
+<div class="login-wrapper">
+
+    <!-- MARQUE -->
+    <div class="brand-zone">
+        <div class="brand-logo">
+    {% if params and params.logo_filename %}
+        <img src="/static/uploads/{{ params.logo_filename }}"
+             style="width:100%; height:100%; object-fit:contain; border-radius:18px;">
+    {% else %}
+        🎵
+    {% endif %}
+</div>
+        <div class="brand-name">KS <span>Production</span></div>
+        <div class="brand-sub">Studio d'Enregistrement & Sonorisation</div>
+    </div>
+
+    <!-- CARTE -->
+    <div class="login-card">
+        <div class="card-title">Connexion</div>
+        <div class="card-sub">Accédez à votre espace de gestion</div>
+
+        <!-- ERREUR -->
+        {% if erreur %}
+        <div class="alert-login">
+            <i class="bi bi-exclamation-circle-fill"></i>
+            {{ erreur }}
+        </div>
+        {% endif %}
+
+        <!-- FORMULAIRE -->
+        <form method="POST" action="/login">
+            <div class="mb-3">
+                <label class="form-label">Nom d'utilisateur</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
+                    <input type="text" class="form-control" name="username"
+                           placeholder="Votre identifiant" required autofocus
+                           autocomplete="username">
+                </div>
+            </div>
+            <div class="mb-4">
+                <label class="form-label">Mot de passe</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                    <input type="password" class="form-control" name="password"
+                           id="inputPwd" placeholder="Votre mot de passe" required
+                           autocomplete="current-password">
+                    <button type="button" class="toggle-pwd" onclick="togglePwd()">
+                        <i class="bi bi-eye-fill" id="eyeIcon"></i>
+                    </button>
+                </div>
+            </div>
+            <button type="submit" class="btn-login">
+                <i class="bi bi-box-arrow-in-right me-2"></i>Se connecter
+            </button>
+        </form>
+
+        <!-- COMPTES DÉMO -->
+        <div class="demo-accounts">
+            <div class="demo-title">Comptes disponibles</div>
+            <div class="demo-item">
+                <span class="demo-role"><i class="bi bi-shield-fill" style="color:#e94560;"></i> Administrateur</span>
+                <span class="demo-creds" onclick="remplir('admin','admin2025')">admin / admin2025</span>
+            </div>
+            <div class="demo-item">
+                <span class="demo-role"><i class="bi bi-cash" style="color:#0984e3;"></i> Caissier</span>
+                <span class="demo-creds" onclick="remplir('caissier','caisse2025')">caissier / caisse2025</span>
+            </div>
+            <div class="demo-item">
+                <span class="demo-role"><i class="bi bi-eye" style="color:#6b7280;"></i> Lecture seule</span>
+                <span class="demo-creds" onclick="remplir('lecture','view2025')">lecture / view2025</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="login-footer">
+        <strong>KS Production Web</strong> v1.0 &nbsp;·&nbsp; Développé par AWUTE Maxime
+    </div>
+
+</div>
+
+<script>
+    function togglePwd() {
+        const input = document.getElementById('inputPwd');
+        const icon  = document.getElementById('eyeIcon');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.className = 'bi bi-eye-slash-fill';
+        } else {
+            input.type = 'password';
+            icon.className = 'bi bi-eye-fill';
+        }
+    }
+
+    function remplir(user, pwd) {
+        document.querySelector('input[name=username]').value = user;
+        document.querySelector('input[name=password]').value = pwd;
+    }
+</script>
+    <!-- Service Worker PWA -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(reg => console.log('SW enregistré:', reg.scope))
+            .catch(err => console.log('SW erreur:', err));
+        });
+      }
+    </script>
+</body>
+</html>

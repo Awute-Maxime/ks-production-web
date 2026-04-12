@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PWA -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#e94560">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="KS Production">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/icons/favicon-16x16.png">
+    <title>Rapport Financier — KS Production</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root { --ks-primary: #1a1a2e; --ks-accent: #e94560; --ks-green: #00b894; }
+        body  { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
+
+        .sidebar {
+            width: 200px; min-height: 100vh; background: var(--ks-primary);
+            position: fixed; left: 0; top: 0; z-index: 100; display: flex; flex-direction: column;
+        }
+        .brand { color: #fff; font-size: .95rem; font-weight: 700; padding: 14px 16px 12px; border-bottom: 1px solid rgba(255,255,255,.1); }
+        .brand span { color: var(--ks-accent); }
+        .brand small { display: block; font-size: .58rem; color: rgba(255,255,255,.3); font-weight: 400; }
+        .sidebar nav { flex: 1; padding: 8px 0; }
+        .nav-section { font-size: .58rem; text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,.28); padding: 10px 16px 3px; font-weight: 600; }
+        .nav-link { color: #aab4c4; padding: 8px 16px; display: flex; align-items: center; gap: 8px; font-size: .8rem; transition: all .2s; }
+        .nav-link:hover, .nav-link.active { color: #fff; background: var(--ks-accent); border-radius: 8px; margin: 0 6px; padding: 8px 10px; }
+        .nav-link i { font-size: .88rem; width: 16px; }
+        .sidebar-footer { padding: 8px 6px 14px; border-top: 1px solid rgba(255,255,255,.1); }
+
+        .main-content { margin-left: 200px; padding: 20px; }
+
+        /* TOPBAR */
+        .topbar {
+            background: #fff; border-radius: 12px; padding: 12px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 16px; box-shadow: 0 1px 6px rgba(0,0,0,.06);
+        }
+        .topbar h5 { margin: 0; font-weight: 700; color: var(--ks-primary); font-size: .95rem; }
+
+        /* FILTRES */
+        .filter-bar {
+            background: #fff; border-radius: 12px; padding: 16px 20px;
+            margin-bottom: 16px; box-shadow: 0 1px 6px rgba(0,0,0,.06);
+        }
+        .filter-title { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--ks-accent); margin-bottom: 12px; }
+        .form-label { font-weight: 600; color: #444; font-size: .82rem; }
+        .form-control, .form-select { border-radius: 8px; border: 1.5px solid #e0e0e0; padding: 7px 11px; font-size: .84rem; }
+        .form-control:focus, .form-select:focus { border-color: var(--ks-accent); box-shadow: 0 0 0 3px #e9456022; }
+
+        /* BOUTONS RACCOURCIS PÉRIODE */
+        .period-shortcuts { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+        .shortcut {
+            background: #f0f2f5; border: 1.5px solid #e0e0e0; border-radius: 20px;
+            padding: 4px 12px; font-size: .75rem; cursor: pointer; color: #444;
+            transition: all .15s;
+        }
+        .shortcut:hover { background: var(--ks-primary); color: #fff; border-color: var(--ks-primary); }
+
+        /* STAT CARDS */
+        .stat-card {
+            border-radius: 12px; padding: 16px 20px; color: #fff;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 3px 12px rgba(0,0,0,.1);
+        }
+        .stat-card .lbl { font-size: .65rem; opacity: .8; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+        .stat-card .val { font-size: 1.1rem; font-weight: 800; }
+        .stat-card .sub { font-size: .62rem; opacity: .7; margin-top: 2px; }
+        .stat-card .ico { font-size: 1.5rem; opacity: .3; }
+        .card-rec  { background: linear-gradient(135deg, #00b894, #00cec9); }
+        .card-dep  { background: linear-gradient(135deg, #d63031, #e17055); }
+        .card-sol+ { background: linear-gradient(135deg, #0984e3, #6c5ce7); }
+        .card-sol- { background: linear-gradient(135deg, #636e72, #2d3436); }
+        .card-fac  { background: linear-gradient(135deg, #6c5ce7, #a29bfe); }
+        .card-imp  { background: linear-gradient(135deg, #e17055, #d63031); }
+
+        /* CHARTS */
+        .chart-card { background: #fff; border-radius: 12px; padding: 16px 20px; box-shadow: 0 1px 6px rgba(0,0,0,.06); }
+        .chart-title { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--ks-primary); margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+        .chart-title i { color: var(--ks-accent); }
+
+        /* TOP CLIENTS */
+        .client-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f3f4f6; }
+        .client-item:last-child { border-bottom: none; }
+        .client-rank { width: 22px; height: 22px; border-radius: 50%; background: var(--ks-primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: .68rem; font-weight: 700; flex-shrink: 0; }
+        .client-nom { font-size: .84rem; font-weight: 600; color: var(--ks-primary); margin-left: 8px; }
+        .client-bar-wrap { flex: 1; margin: 0 12px; }
+        .client-bar { height: 6px; border-radius: 3px; background: linear-gradient(90deg, var(--ks-accent), #6c5ce7); }
+        .client-val { font-size: .78rem; font-weight: 700; color: var(--ks-green); white-space: nowrap; }
+
+        /* TABLE OPS */
+        .table-card { background: #fff; border-radius: 12px; box-shadow: 0 1px 6px rgba(0,0,0,.06); overflow: hidden; }
+        .table-head { background: var(--ks-primary); color: #fff; padding: 12px 18px; display: flex; justify-content: space-between; align-items: center; }
+        .table-head span { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; }
+        .ops-table { width: 100%; border-collapse: collapse; font-size: .8rem; }
+        .ops-table thead th { background: #f8f9fa; color: #6b7280; font-size: .66rem; text-transform: uppercase; letter-spacing: .05em; padding: 8px 12px; font-weight: 600; border: none; }
+        .ops-table tbody tr { border-bottom: 1px solid #f3f4f6; }
+        .ops-table tbody tr:hover { background: #f8f9fe; }
+        .ops-table tbody td { padding: 8px 12px; color: #374151; }
+        .b-rec { background: #d1fae5; color: #065f46; border-radius: 20px; padding: 2px 8px; font-size: .66rem; font-weight: 600; }
+        .b-dep { background: #fee2e2; color: #991b1b; border-radius: 20px; padding: 2px 8px; font-size: .66rem; font-weight: 600; }
+        .b-stu { background: #e0f2fe; color: #0369a1; border-radius: 20px; padding: 2px 8px; font-size: .66rem; font-weight: 600; }
+        .b-son { background: #fef3c7; color: #92400e; border-radius: 20px; padding: 2px 8px; font-size: .66rem; font-weight: 600; }
+
+        /* PRINT */
+        @media print {
+            .sidebar { display: none !important; }
+            .main-content { margin-left: 0; }
+            .filter-bar { display: none !important; }
+            .topbar .d-flex { display: none !important; }
+            @page { margin: 8mm; }
+        }
+
+        
+        /* ── RESPONSIVE MOBILE ── */
+        .hamburger-btn {
+            display: none; position: fixed; top: 12px; left: 12px; z-index: 200;
+            background: var(--ks-accent, #e94560); color: #fff; border: none;
+            border-radius: 10px; width: 40px; height: 40px; font-size: 1.1rem;
+            cursor: pointer; align-items: center; justify-content: center;
+            box-shadow: 0 3px 12px rgba(233,69,96,.4); transition: all .2s;
+        }
+        .hamburger-btn:hover { background: #c0392b; }
+        .sidebar-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,.5); z-index: 150; backdrop-filter: blur(2px);
+        }
+        .sidebar-overlay.active { display: block; }
+        @media (max-width: 768px) {
+            .hamburger-btn { display: flex; }
+            .sidebar { transform: translateX(-100%); transition: transform .3s ease; z-index: 160; width: 240px !important; }
+            .sidebar.open { transform: translateX(0); }
+            .main-content, .main { margin-left: 0 !important; padding: 12px !important; padding-top: 60px !important; }
+            .topbar { flex-wrap: wrap; gap: 8px; padding: 10px 12px 10px 60px !important; }
+            .topbar h5 { font-size: .85rem !important; }
+            .table-responsive { overflow-x: auto; }
+            .fac-table, .rel-table, .ops-table, .pai-table { min-width: 700px; }
+            .stats-row { flex-direction: column; }
+            .stat-mini { min-width: unset !important; }
+            .client-grid { grid-template-columns: 1fr !important; }
+            .filter-bar { flex-wrap: wrap; gap: 8px !important; }
+            .filter-bar .form-select, .filter-bar .form-control { width: 100% !important; }
+            .modal-dialog { margin: 8px !important; max-width: calc(100vw - 16px) !important; }
+            .modal-body { max-height: 70vh; overflow-y: auto; }
+            .row.g-3 > [class*="col-md-"], .row.g-2 > [class*="col-md-"] { flex: 0 0 100%; max-width: 100%; }
+        }
+        @media (max-width: 480px) {
+            .topbar .d-flex { flex-wrap: wrap; }
+            .stat-card .val { font-size: .95rem !important; }
+        } }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="brand">🎵 KS <span>Production</span><small>Rapport financier</small></div>
+    <nav>
+        <div class="nav-section">Menu</div>
+        <a href="/dashboard" class="nav-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        <a href="/factures" class="nav-link"><i class="bi bi-receipt"></i> Factures</a>
+        <a href="/proformas" class="nav-link"><i class="bi bi-file-earmark-text"></i> Proformas</a>
+        <a href="/agenda" class="nav-link"><i class="bi bi-calendar3"></i> Agenda</a>
+        <a href="/operations" class="nav-link"><i class="bi bi-arrow-left-right"></i> Opérations</a>
+        <a href="/clients" class="nav-link"><i class="bi bi-people"></i> Clients</a>
+        <div class="nav-section">Finance</div>
+        <a href="/paiements" class="nav-link"><i class="bi bi-clock-history"></i> Paiements</a>
+        <a href="/relances" class="nav-link"><i class="bi bi-bell-fill"></i> Relances</a>
+        <a href="/rapport" class="nav-link active"><i class="bi bi-bar-chart-line"></i> Rapport</a>
+        {% if role == 'Administrateur' %}
+        <div class="nav-section">Admin</div>
+        <a href="/services" class="nav-link"><i class="bi bi-grid"></i> Services</a>
+        <a href="/utilisateurs" class="nav-link"><i class="bi bi-person-gear"></i> Utilisateurs</a>
+        <a href="/techniciens" class="nav-link"><i class="bi bi-people-fill"></i> Techniciens</a>
+        <a href="/parametres" class="nav-link"><i class="bi bi-gear"></i> Paramètres</a>
+        <a href="/sauvegarde" class="nav-link"><i class="bi bi-cloud-arrow-down"></i> Sauvegarde</a>
+        <a href="/reinitialiser" class="nav-link" style="color:#e74c3c;"><i class="bi bi-arrow-counterclockwise"></i> Réinitialiser</a>
+        {% endif %}
+    </nav>
+    <div class="sidebar-footer">
+        <a href="/profil" class="nav-link"><i class="bi bi-person-circle"></i> Mon Profil</a>
+        <a href="/logout" class="nav-link" style="color:#e74c3c;"><i class="bi bi-box-arrow-left"></i> Déconnexion</a>
+    </div>
+</div>
+
+<button class="hamburger-btn" onclick="toggleSidebar()" id="hamburgerBtn">
+    <i class="bi bi-list" id="hamburgerIcon"></i>
+</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+
+<!-- MAIN -->
+<div class="main-content">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+        <div>
+            <h5><i class="bi bi-bar-chart-line me-2" style="color:var(--ks-accent);"></i>Rapport Financier par Période</h5>
+            <small class="text-muted">Du {{ date_debut }} au {{ date_fin }}
+                {% if section %} · Section : {{ section }}{% endif %}
+            </small>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+            <button onclick="window.print()" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-printer me-1"></i>Imprimer
+            </button>
+            <!-- CLOCHE ALERTES -->
+            <div class="position-relative">
+                <button id="btnCloche" onclick="toggleAlertes()"
+                        style="background:none; border:none; cursor:pointer; position:relative; padding:4px 8px;">
+                    <i class="bi bi-bell-fill" style="font-size:1.25rem; color:#6b7280;" id="iconeCloche"></i>
+                    <span id="badgeAlertes"
+                          style="display:none; position:absolute; top:0px; right:2px;
+                                 background:#e94560; color:#fff; border-radius:50%;
+                                 width:17px; height:17px; font-size:.58rem; font-weight:700;
+                                 align-items:center; justify-content:center; line-height:1;">0</span>
+                </button>
+                <div id="panneauAlertes"
+                     style="display:none; position:absolute; right:0; top:44px; width:340px; z-index:9999;
+                            background:#fff; border-radius:14px; box-shadow:0 8px 30px rgba(0,0,0,.15);
+                            overflow:hidden; border:1px solid #f0f0f0;">
+                    <div style="background:#1a1a2e; color:#fff; padding:12px 16px; display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:.82rem; font-weight:700;"><i class="bi bi-bell-fill me-2" style="color:#e94560;"></i>Alertes prestations</span>
+                        <span id="nbAlertesHead" style="background:#e94560; color:#fff; border-radius:20px; padding:1px 8px; font-size:.7rem; font-weight:700;">0</span>
+                    </div>
+                    <div id="listeAlertes" style="max-height:360px; overflow-y:auto; padding:8px;">
+                        <div style="text-align:center; padding:20px; color:#9ca3af; font-size:.8rem;">
+                            <i class="bi bi-hourglass" style="font-size:1.5rem; display:block; margin-bottom:6px;"></i>Chargement...
+                        </div>
+                    </div>
+                    <div style="padding:10px 16px; border-top:1px solid #f0f0f0; text-align:center;">
+                        <a href="/agenda" style="font-size:.75rem; color:#6c5ce7; text-decoration:none; font-weight:600;">
+                            <i class="bi bi-calendar3 me-1"></i>Voir l'agenda complet
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FILTRES -->
+    <div class="filter-bar">
+        <div class="filter-title"><i class="bi bi-funnel me-2"></i>Paramètres du rapport</div>
+
+        <!-- Raccourcis période -->
+        <div class="period-shortcuts">
+            <span class="shortcut" onclick="setPeriode('mois')">📅 Ce mois</span>
+            <span class="shortcut" onclick="setPeriode('trimestre')">📊 Ce trimestre</span>
+            <span class="shortcut" onclick="setPeriode('annee')">📆 Cette année</span>
+            <span class="shortcut" onclick="setPeriode('semaine')">🗓️ Cette semaine</span>
+        </div>
+
+        <form method="GET" action="/rapport">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label">Date début</label>
+                    <input type="date" class="form-control" name="date_debut"
+                           id="date_debut" value="{{ date_debut }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Date fin</label>
+                    <input type="date" class="form-control" name="date_fin"
+                           id="date_fin" value="{{ date_fin }}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Section</label>
+                    <select class="form-select" name="section">
+                        <option value="">Toutes les sections</option>
+                        <option value="Studio"       {% if section == 'Studio' %}selected{% endif %}>Studio</option>
+                        <option value="Sonorisation" {% if section == 'Sonorisation' %}selected{% endif %}>Sonorisation</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary flex-fill">
+                        <i class="bi bi-search me-1"></i>Générer
+                    </button>
+                    <a href="/rapport" class="btn btn-outline-secondary">Reset</a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- STATS OPÉRATIONS -->
+    <div class="row g-3 mb-3">
+        <div class="col-md-4">
+            <div class="stat-card card-rec">
+                <div><div class="lbl">Total Recettes</div><div class="val">{{ total_recettes }} FCFA</div><div class="sub">{{ nb_operations }} opération(s)</div></div>
+                <i class="bi bi-arrow-up-circle ico"></i>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card card-dep">
+                <div><div class="lbl">Total Dépenses</div><div class="val">{{ total_depenses }} FCFA</div></div>
+                <i class="bi bi-arrow-down-circle ico"></i>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card {% if solde_positif %}card-sol+{% else %}card-sol-{% endif %}"
+                 style="background: linear-gradient(135deg, {% if solde_positif %}#0984e3, #6c5ce7{% else %}#636e72, #2d3436{% endif %});">
+                <div><div class="lbl">Solde Net</div><div class="val">{{ solde_net }} FCFA</div></div>
+                <i class="bi bi-wallet2 ico"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- STATS FACTURES -->
+    <div class="row g-3 mb-3">
+        <div class="col-md-3">
+            <div class="stat-card card-fac">
+                <div><div class="lbl">Factures émises</div><div class="val">{{ nb_factures }}</div><div class="sub">{{ nb_payees }} payées · {{ nb_impayees }} impayées</div></div>
+                <i class="bi bi-receipt ico"></i>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card card-rec">
+                <div><div class="lbl">Montant facturé</div><div class="val">{{ total_facture }} FCFA</div></div>
+                <i class="bi bi-cash ico"></i>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card" style="background:linear-gradient(135deg,#00b894,#00cec9);">
+                <div><div class="lbl">Encaissé</div><div class="val">{{ total_encaisse }} FCFA</div></div>
+                <i class="bi bi-check-circle ico"></i>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card card-imp">
+                <div><div class="lbl">Reste à encaisser</div><div class="val">{{ total_impayes }} FCFA</div></div>
+                <i class="bi bi-exclamation-circle ico"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- GRAPHIQUES + TOP CLIENTS -->
+    <div class="row g-3 mb-3">
+        <div class="col-md-5">
+            <div class="chart-card">
+                <div class="chart-title"><i class="bi bi-pie-chart"></i> Recettes par section</div>
+                <div style="height:200px; position:relative;">
+                    <canvas id="chartSections"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-7">
+            <div class="chart-card">
+                <div class="chart-title"><i class="bi bi-trophy"></i> Top 5 clients</div>
+                {% if top_clients %}
+                {% set max_val = top_clients[0][1] %}
+                {% for nom, val in top_clients %}
+                <div class="client-item">
+                    <div class="client-rank">{{ loop.index }}</div>
+                    <div class="client-nom">{{ nom }}</div>
+                    <div class="client-bar-wrap">
+                        <div class="client-bar" style="width:{{ ((val / max_val) * 100)|round }}%;"></div>
+                    </div>
+                    <div class="client-val">{{ "{:,.0f}".format(val).replace(',', ' ') }} FCFA</div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="text-muted text-center py-3" style="font-size:.82rem;">Aucune donnée sur cette période</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- DÉTAIL DÉPENSES -->
+    {% if depenses_data %}
+    <div class="row g-3 mb-3">
+        <div class="col-12">
+            <div class="chart-card">
+                <div class="chart-title"><i class="bi bi-list-check"></i> Détail des dépenses</div>
+                <div class="table-responsive">
+                    <table class="ops-table">
+                        <thead>
+                            <tr>
+                                <th>Libellé</th>
+                                <th class="text-end">Montant (FCFA)</th>
+                                <th style="width:200px;">Part</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% set total_dep = depenses_data.values()|sum %}
+                            {% for libelle, montant in depenses_data.items()|sort(attribute='1', reverse=True) %}
+                            <tr>
+                                <td>{{ libelle }}</td>
+                                <td class="text-end" style="color:#d63031; font-weight:700;">
+                                    {{ "{:,.0f}".format(montant).replace(',', ' ') }} FCFA
+                                </td>
+                                <td>
+                                    <div style="height:6px; background:#fee2e2; border-radius:3px; overflow:hidden;">
+                                        <div style="height:100%; width:{{ ((montant/total_dep)*100)|round }}%; background:#d63031; border-radius:3px;"></div>
+                                    </div>
+                                    <small style="font-size:.65rem; color:#9ca3af;">{{ ((montant/total_dep)*100)|round(1) }}%</small>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- LISTE DES OPÉRATIONS -->
+    <div class="table-card mb-3">
+        <div class="table-head">
+            <span><i class="bi bi-list-ul me-2"></i>Toutes les opérations de la période</span>
+            <small style="opacity:.6;">{{ nb_operations }} résultat(s)</small>
+        </div>
+        <div class="table-responsive">
+            <table class="ops-table">
+                <thead>
+                    <tr>
+                        <th>N° Opération</th>
+                        <th>Date</th>
+                        <th>Client / Libellé</th>
+                        <th>Service</th>
+                        <th>Section</th>
+                        <th>Type</th>
+                        <th class="text-end">Montant (FCFA)</th>
+                        <th>Saisi par</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for op in operations %}
+                    <tr>
+                        <td><strong style="color:var(--ks-accent); font-size:.72rem;">{{ op.numero }}</strong></td>
+                        <td>{{ op.date.strftime('%d/%m/%Y') }}</td>
+                        <td>{{ op.nom_client or '—' }}</td>
+                        <td style="max-width:160px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ op.service }}</td>
+                        <td>
+                            {% if op.section == 'Studio' %}<span class="b-stu">Studio</span>
+                            {% elif op.section == 'Sonorisation' %}<span class="b-son">Sono</span>
+                            {% else %}{{ op.section or '—' }}{% endif %}
+                        </td>
+                        <td>
+                            {% if op.type_operation == 'Recettes' %}<span class="b-rec">↑ Recette</span>
+                            {% else %}<span class="b-dep">↓ Dépense</span>{% endif %}
+                        </td>
+                        <td class="text-end fw-bold" style="color:{% if op.type_operation == 'Recettes' %}var(--ks-green){% else %}#d63031{% endif %};">
+                            {% if op.type_operation == 'Depenses' %}−{% endif %}
+                            {{ "{:,.0f}".format(op.montant_ttc).replace(',', ' ') }}
+                        </td>
+                        <td><small class="text-muted">{{ op.cree_par }}</small></td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="8" class="text-center py-4 text-muted" style="font-size:.82rem;">
+                        <i class="bi bi-inbox" style="font-size:1.5rem; display:block; margin-bottom:6px;"></i>
+                        Aucune opération sur cette période
+                    </td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // Graphique sections
+    const sectionsLabels = {{ sections_labels | safe }};
+    const sectionsValues = {{ sections_values | safe }};
+
+    if (sectionsValues.length > 0) {
+        new Chart(document.getElementById('chartSections'), {
+            type: 'doughnut',
+            data: {
+                labels: sectionsLabels,
+                datasets: [{ data: sectionsValues, backgroundColor: ['#0984e3','#e17055','#6c5ce7','#00b894','#e94560'], borderWidth: 2, borderColor: '#fff' }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false, cutout: '60%',
+                plugins: {
+                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 10, font: { size: 10 } } },
+                    tooltip: { callbacks: { label: ctx => ` ${ctx.label} : ${ctx.raw.toLocaleString('fr-FR')} FCFA` } }
+                }
+            }
+        });
+    }
+
+    // Raccourcis période
+    function setPeriode(type) {
+        const today = new Date();
+        let debut, fin;
+
+        if (type === 'mois') {
+            debut = new Date(today.getFullYear(), today.getMonth(), 1);
+            fin   = today;
+        } else if (type === 'trimestre') {
+            const trim = Math.floor(today.getMonth() / 3);
+            debut = new Date(today.getFullYear(), trim * 3, 1);
+            fin   = today;
+        } else if (type === 'annee') {
+            debut = new Date(today.getFullYear(), 0, 1);
+            fin   = today;
+        } else if (type === 'semaine') {
+            const day = today.getDay() || 7;
+            debut = new Date(today);
+            debut.setDate(today.getDate() - day + 1);
+            fin   = today;
+        }
+
+        const fmt = d => d.toISOString().split('T')[0];
+        document.getElementById('date_debut').value = fmt(debut);
+        document.getElementById('date_fin').value   = fmt(fin);
+    }
+</script>
+<script>
+let alertesOuvert = false;
+function toggleAlertes() {
+    const panneau = document.getElementById('panneauAlertes');
+    alertesOuvert = !alertesOuvert;
+    panneau.style.display = alertesOuvert ? 'block' : 'none';
+    if (alertesOuvert) chargerAlertes();
+}
+document.addEventListener('click', function(e) {
+    const btn = document.getElementById('btnCloche');
+    const panneau = document.getElementById('panneauAlertes');
+    if (btn && panneau && !btn.contains(e.target) && !panneau.contains(e.target)) {
+        panneau.style.display = 'none'; alertesOuvert = false;
+    }
+});
+function chargerAlertes() {
+    fetch('/api/alertes').then(r => r.json()).then(data => {
+        const liste = document.getElementById('listeAlertes');
+        const badge = document.getElementById('badgeAlertes');
+        const nbHead = document.getElementById('nbAlertesHead');
+        const icone = document.getElementById('iconeCloche');
+        const nb = data.length;
+        nbHead.textContent = nb;
+        if (nb > 0) { badge.textContent = nb > 9 ? '9+' : nb; badge.style.display = 'flex'; icone.style.color = '#e94560'; }
+        else { badge.style.display = 'none'; icone.style.color = '#6b7280'; }
+        if (data.length === 0) {
+            liste.innerHTML = `<div style="text-align:center;padding:24px;color:#9ca3af;"><i class="bi bi-check-circle" style="font-size:2rem;color:#10b981;display:block;margin-bottom:8px;"></i><div style="font-size:.82rem;">Aucune prestation imminente</div></div>`;
+            return;
+        }
+        liste.innerHTML = data.map(a => `
+            <div style="padding:10px 12px;border-radius:10px;margin-bottom:6px;display:flex;gap:10px;border-left:4px solid ${a.niveau=='danger'?'#e94560':a.niveau=='warning'?'#f59e0b':'#6c5ce7'};background:${a.niveau=='danger'?'#fff5f7':a.niveau=='warning'?'#fffbeb':'#f5f3ff'};cursor:pointer;" onclick="window.location='/agenda'">
+                <div style="flex:1;min-width:0;">
+                    <div style="display:flex;justify-content:space-between;gap:4px;">
+                        <div style="font-size:.8rem;font-weight:700;color:#1a1a2e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a.titre}</div>
+                        <span style="font-size:.68rem;font-weight:700;padding:1px 7px;border-radius:10px;background:${a.niveau=='danger'?'#fee2e2':a.niveau=='warning'?'#fef3c7':'#ede9fe'};color:${a.niveau=='danger'?'#991b1b':a.niveau=='warning'?'#92400e':'#5b21b6'};flex-shrink:0;">${a.label}</span>
+                    </div>
+                    <div style="font-size:.7rem;color:#6b7280;margin-top:2px;">
+                        <i class="bi bi-calendar3 me-1"></i>${a.date}
+                        ${a.heure ? `<i class="bi bi-clock ms-2 me-1"></i>${a.heure}` : ''}
+                        ${a.client ? `<i class="bi bi-person ms-2 me-1"></i>${a.client}` : ''}
+                    </div>
+                </div>
+            </div>`).join('');
+    }).catch(() => {});
+}
+function initBadgeAlertes() {
+    fetch('/api/alertes').then(r => r.json()).then(data => {
+        const badge = document.getElementById('badgeAlertes');
+        const icone = document.getElementById('iconeCloche');
+        if (data.length > 0) { badge.textContent = data.length > 9 ? '9+' : data.length; badge.style.display = 'flex'; icone.style.color = '#e94560'; }
+    }).catch(() => {});
+}
+document.addEventListener('DOMContentLoaded', initBadgeAlertes);
+</script>
+    <!-- Service Worker PWA -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(reg => console.log('SW enregistré:', reg.scope))
+            .catch(err => console.log('SW erreur:', err));
+        });
+      }
+    </script>
+</body>
+</html>

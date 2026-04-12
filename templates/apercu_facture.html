@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PWA -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#e94560">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="KS Production">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/icons/favicon-16x16.png">
+    <title>Facture {{ facture.numero }} — {{ params.nom_entreprise }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root { --accent: {{ params.couleur_principale }}; --dark: #1a1a2e; --gray: #6b7280; --border: #e5e7eb; --light: #f9fafb; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #eef0f4; font-family: 'Segoe UI', Arial, sans-serif; color: #374151; }
+
+        .action-bar {
+            background: var(--dark); padding: 10px 28px;
+            display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 100;
+        }
+        .action-bar .brand { color: #fff; font-weight: 700; font-size: 1rem; }
+        .action-bar .brand em { color: var(--accent); font-style: normal; }
+        .btn-act { padding: 6px 14px; border-radius: 6px; font-size: .8rem; cursor: pointer; border: 1.5px solid rgba(255,255,255,.3); color: #fff; background: transparent; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
+        .btn-act:hover { background: rgba(255,255,255,.12); color: #fff; }
+        .btn-print { background: #6b7280; border-color: #6b7280; }
+        .btn-pdf   { background: var(--accent); border-color: var(--accent); font-weight: 700; }
+        .btn-pdf:hover { opacity: .9; }
+
+        .page-wrap { max-width: 794px; margin: 28px auto 60px; padding: 0 16px; }
+        .facture { background: #fff; border-radius: 4px; box-shadow: 0 2px 16px rgba(0,0,0,.08); overflow: hidden; }
+        .top-accent { height: 4px; background: linear-gradient(90deg, var(--accent) 0%, #6c5ce7 60%, transparent 100%); }
+        .facture-inner { padding: 32px 44px 30px; }
+
+        .header { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 22px; align-items: start; }
+        .logo-block { display: flex; flex-direction: column; align-items: flex-start; margin-bottom: 12px; }
+        .logo-block img { height: 68px; width: auto; object-fit: contain; display: block; margin-bottom: 8px; }
+        .logo-placeholder { width: 60px; height: 60px; border-radius: 12px; background: linear-gradient(135deg, var(--accent), #6c5ce7); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 1.5rem; margin-bottom: 8px; }
+        .company-name    { font-size: 1.15rem; font-weight: 700; color: var(--dark); }
+        .company-tagline { font-size: .72rem; color: var(--gray); margin-top: 2px; }
+        .company-info    { margin-top: 10px; }
+        .info-row { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; font-size: .72rem; color: #555; }
+        .info-row i { color: var(--accent); font-size: .75rem; width: 13px; }
+
+        .col-right { text-align: right; }
+        .facture-title { font-size: 2.5rem; font-weight: 900; color: var(--dark); letter-spacing: -.03em; line-height: 1; }
+        .facture-ref   { font-size: .88rem; color: var(--accent); font-weight: 700; margin-top: 5px; }
+        .facture-meta  { font-size: .73rem; color: var(--gray); margin-top: 3px; }
+        .badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 13px; border-radius: 20px; font-size: .73rem; font-weight: 700; margin-top: 9px; }
+        .badge-paye    { background: #d1fae5; color: #065f46; }
+        .badge-impaye  { background: #fee2e2; color: #991b1b; }
+        .badge-partiel { background: #fef3c7; color: #92400e; }
+
+        .client-box { margin-top: 14px; text-align: left; background: var(--light); border-radius: 8px; padding: 11px 15px; border-left: 3px solid var(--accent); }
+        .cb-label { font-size: .66rem; text-transform: uppercase; letter-spacing: .1em; color: var(--accent); font-weight: 700; margin-bottom: 5px; }
+        .cb-name  { font-size: .92rem; font-weight: 700; color: var(--dark); }
+        .cb-info  { display: flex; align-items: center; gap: 5px; font-size: .72rem; color: #555; margin-top: 3px; }
+        .cb-info i { color: var(--accent); font-size: .72rem; }
+
+        .divider { height: 1px; background: var(--border); margin: 0 0 22px; }
+
+        table.services { width: 100%; border-collapse: collapse; margin-bottom: 18px; }
+        table.services thead tr { background: var(--dark); color: #fff; }
+        table.services thead th { padding: 10px 13px; font-size: .7rem; text-transform: uppercase; letter-spacing: .07em; font-weight: 600; }
+        table.services thead th:not(:first-child) { text-align: right; }
+        table.services tbody tr { border-bottom: 1px solid var(--border); }
+        table.services tbody td { padding: 12px 13px; font-size: .85rem; }
+        table.services tbody td:not(:first-child) { text-align: right; }
+        table.services tbody tr:nth-child(even) { background: #fafafa; }
+        .svc-name { font-weight: 600; color: var(--dark); }
+
+        .totaux-wrap { display: flex; justify-content: flex-end; margin-bottom: 20px; }
+        .totaux { width: 260px; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+        .t-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 15px; font-size: .82rem; border-bottom: 1px solid var(--border); }
+        .t-row:last-child { border-bottom: none; }
+        .t-lbl { color: var(--gray); }
+        .t-val { font-weight: 600; color: var(--dark); }
+        .t-row.ttc { background: var(--dark); padding: 11px 15px; }
+        .t-row.ttc .t-lbl { color: rgba(255,255,255,.7); font-weight: 600; font-size: .85rem; }
+        .t-row.ttc .t-val { color: #fff; font-size: 1rem; font-weight: 800; }
+        .t-row.paye  { background: #d1fae5; }
+        .t-row.paye  .t-lbl, .t-row.paye  .t-val { color: #065f46; font-weight: 600; }
+        .t-row.reste { background: #fee2e2; }
+        .t-row.reste .t-lbl, .t-row.reste .t-val { color: #991b1b; font-weight: 600; }
+
+        .arrete-box { background: var(--light); border-left: 4px solid var(--accent); border-radius: 8px; padding: 11px 16px; margin-bottom: 18px; }
+        .arrete-label { font-size: .63rem; text-transform: uppercase; letter-spacing: .1em; color: var(--accent); font-weight: 700; margin-bottom: 5px; }
+        .arrete-text  { font-size: .82rem; font-style: italic; color: var(--dark); line-height: 1.5; }
+        .arrete-text strong { font-style: normal; font-weight: 700; }
+
+        .banque { background: var(--light); border-radius: 8px; padding: 10px 15px; margin-bottom: 22px; font-size: .73rem; color: #555; border-left: 3px solid var(--gray); }
+        .banque strong { display: block; color: var(--gray); font-size: .66rem; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 3px; }
+
+        .footer { display: flex; justify-content: space-between; align-items: flex-end; padding-top: 16px; border-top: 1px solid var(--border); }
+        .mentions { font-size: .7rem; color: #9ca3af; max-width: 320px; line-height: 1.6; }
+        .mentions em { display: block; margin-top: 5px; color: #b0b7c3; }
+        .sig-wrap { text-align: center; }
+        .sig-box { width: 140px; height: 58px; border: 1.5px dashed #d1d5db; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: .7rem; color: #d1d5db; }
+        .sig-label { font-size: .66rem; color: #9ca3af; margin-top: 4px; }
+
+        @media print {
+            body { background: #fff !important; }
+            .action-bar { display: none !important; }
+            .page-wrap { margin: 0; padding: 0; max-width: 100%; }
+            .facture { box-shadow: none !important; border-radius: 0 !important; }
+            .facture-inner { padding: 20px 36px 20px; }
+            @page { margin: 8mm; size: A4; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="action-bar d-print-none">
+    <div class="brand">🎵 {{ params.nom_entreprise }} — <em>Aperçu Facture</em></div>
+    <div style="display:flex; gap:8px;">
+        <a href="/factures" class="btn-act"><i class="bi bi-arrow-left"></i> Retour</a>
+        <button onclick="window.print()" class="btn-act btn-print">
+            <i class="bi bi-printer"></i> Imprimer
+        </button>
+        <button onclick="exporterPDF()" class="btn-act btn-pdf">
+            <i class="bi bi-file-earmark-pdf"></i> Télécharger PDF
+        </button>
+    </div>
+</div>
+
+<div class="page-wrap" id="zonePDF">
+<div class="facture">
+    <div class="top-accent"></div>
+    <div class="facture-inner">
+
+        <div class="header">
+            <div class="col-left">
+                <div class="logo-block">
+                    {% if params.logo_filename %}
+                        <img src="/static/uploads/{{ params.logo_filename }}" alt="Logo">
+                    {% else %}
+                        <div class="logo-placeholder">🎵</div>
+                    {% endif %}
+                    <div class="company-name">{{ params.nom_entreprise }}</div>
+                    <div class="company-tagline">{{ params.slogan }}</div>
+                </div>
+                <div class="company-info">
+                    {% if params.adresse %}<div class="info-row"><i class="bi bi-geo-alt-fill"></i> {{ params.adresse }}</div>{% endif %}
+                    {% if params.telephone %}<div class="info-row"><i class="bi bi-telephone-fill"></i> {{ params.telephone }}</div>{% endif %}
+                    {% if params.email %}<div class="info-row"><i class="bi bi-envelope-fill"></i> {{ params.email }}</div>{% endif %}
+                    {% if params.site_web %}<div class="info-row"><i class="bi bi-globe"></i> {{ params.site_web }}</div>{% endif %}
+                    {% if params.nif %}<div class="info-row"><i class="bi bi-card-text"></i> NIF : {{ params.nif }}</div>{% endif %}
+                    {% if params.rccm %}<div class="info-row"><i class="bi bi-building"></i> RCCM : {{ params.rccm }}</div>{% endif %}
+                </div>
+            </div>
+            <div class="col-right">
+                <div class="facture-title">FACTURE</div>
+                <div class="facture-ref">N° {{ facture.numero }}</div>
+                <div class="facture-meta">Date : {{ facture.date.strftime('%d/%m/%Y') }}</div>
+                <div class="facture-meta">Section : {{ facture.section or '—' }}</div>
+                <div>
+                    {% if facture.etat_paiement == 'Payer' %}
+                        <span class="badge badge-paye"><i class="bi bi-check-circle-fill"></i> PAYÉ</span>
+                    {% elif facture.etat_paiement == 'Partiel' %}
+                        <span class="badge badge-partiel"><i class="bi bi-exclamation-circle-fill"></i> PARTIEL</span>
+                    {% else %}
+                        <span class="badge badge-impaye"><i class="bi bi-x-circle-fill"></i> NON PAYÉ</span>
+                    {% endif %}
+                </div>
+                <div class="client-box">
+                    <div class="cb-label">Facturé à</div>
+                    <div class="cb-name">{{ facture.nom_client }}</div>
+                    {% if client %}
+                        {% if client.telephone %}<div class="cb-info"><i class="bi bi-telephone"></i> {{ client.telephone }}</div>{% endif %}
+                        {% if client.email %}<div class="cb-info"><i class="bi bi-envelope"></i> {{ client.email }}</div>{% endif %}
+                        {% if client.adresse %}<div class="cb-info"><i class="bi bi-geo-alt"></i> {{ client.adresse }}</div>{% endif %}
+                        {% if client.nif %}<div class="cb-info"><i class="bi bi-card-text"></i> NIF : {{ client.nif }}</div>{% endif %}
+                        {% if client.rccm %}<div class="cb-info"><i class="bi bi-building"></i> RCCM : {{ client.rccm }}</div>{% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <table class="services">
+            <thead>
+                <tr>
+                    <th style="width:46%; text-align:left;">Description du service</th>
+                    <th style="width:10%;">Qté</th>
+                    <th style="width:22%;">Prix unitaire HT</th>
+                    <th style="width:22%;">Total TTC</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ligne in lignes %}
+                <tr>
+                    <td><span class="svc-name">{{ ligne.service }}</span></td>
+                    <td>{{ ligne.quantite }}</td>
+                    <td>{{ "{:,.0f}".format(ligne.prix_unitaire).replace(',', ' ') }} FCFA</td>
+                    <td><strong>{{ "{:,.0f}".format(ligne.montant_ttc).replace(',', ' ') }} FCFA</strong></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="totaux-wrap">
+            <div class="totaux">
+                <div class="t-row"><span class="t-lbl">Sous-total HT</span><span class="t-val">{{ total_ht }} FCFA</span></div>
+                <div class="t-row"><span class="t-lbl">TVA ({{ tva_taux }}%)</span><span class="t-val">{{ total_tva }} FCFA</span></div>
+                <div class="t-row ttc"><span class="t-lbl">TOTAL TTC</span><span class="t-val">{{ montant_ttc }} FCFA</span></div>
+                {% if facture.montant_paye > 0 %}
+                <div class="t-row paye"><span class="t-lbl">✓ Montant payé</span><span class="t-val">{{ montant_paye }} FCFA</span></div>
+                {% endif %}
+                {% if facture.reste_du > 0 %}
+                <div class="t-row reste"><span class="t-lbl">⚠ Reste dû</span><span class="t-val">{{ reste_du }} FCFA</span></div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="arrete-box">
+            <div class="arrete-label"><i class="bi bi-pen me-1"></i>Arrêté</div>
+            <div class="arrete-text">
+                Arrêté la présente facture à la somme de
+                <strong id="montantLettres">—</strong>
+                Francs CFA ({{ montant_ttc }} FCFA).
+            </div>
+        </div>
+
+        {% if params.coordonnees_bancaires %}
+        <div class="banque">
+            <strong>Coordonnées bancaires</strong>
+            {{ params.coordonnees_bancaires }}
+        </div>
+        {% endif %}
+
+        <div class="footer">
+            <div class="mentions">
+                {{ params.mentions_legales or 'Paiement à réception de facture. Tout retard de paiement entraîne des pénalités.' }}
+                <em>Merci pour votre confiance — {{ params.nom_entreprise }}</em>
+            </div>
+            <div class="sig-wrap">
+                <div class="sig-box">Cachet &amp; Signature</div>
+                <div class="sig-label">Autorisé par {{ params.nom_entreprise }}</div>
+            </div>
+        </div>
+
+    </div>
+</div>
+</div>
+
+<!-- html2pdf.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+    // Montant en lettres
+    const unites   = ['','un','deux','trois','quatre','cinq','six','sept','huit','neuf','dix','onze','douze','treize','quatorze','quinze','seize','dix-sept','dix-huit','dix-neuf'];
+    const dizaines = ['','','vingt','trente','quarante','cinquante','soixante','soixante','quatre-vingt','quatre-vingt'];
+    function centaines(n) {
+        if(n===0)return''; let s=''; const c=Math.floor(n/100),r=n%100;
+        if(c>1)s+=unites[c]+' cent'; else if(c===1)s+='cent';
+        if(c>1&&r===0)s+='s';
+        if(r>0){if(c>0)s+=' ';if(r<20)s+=unites[r];else{const d=Math.floor(r/10),u=r%10;s+=dizaines[d];if(d===7||d===9){s+=(u===1&&d===7?'-et-':'-')+unites[10+u];}else{if(u===1&&d!==8)s+='-et-un';else if(u>0)s+='-'+unites[u];else if(d===8)s+='s';}}}
+        return s;
+    }
+    function nombreEnLettres(n) {
+        n=Math.round(n); if(n===0)return'Zéro'; let s='';
+        const M=Math.floor(n/1000000),K=Math.floor((n%1000000)/1000),R=n%1000;
+        if(M>0)s+=centaines(M)+' million'+(M>1?'s':'')+' ';
+        if(K>0)s+=(K===1?'mille':centaines(K)+' mille')+' ';
+        if(R>0)s+=centaines(R);
+        s=s.trim(); return s.charAt(0).toUpperCase()+s.slice(1);
+    }
+    document.getElementById('montantLettres').textContent = nombreEnLettres({{ facture.montant_ttc }});
+
+    // Export PDF
+    function exporterPDF() {
+        const btn = document.querySelector('.btn-pdf');
+        btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Génération...';
+        btn.disabled = true;
+
+        const element = document.getElementById('zonePDF');
+        const nomFichier = 'Facture_{{ facture.numero }}.pdf';
+
+        const options = {
+            margin       : [8, 8, 8, 8],
+            filename     : nomFichier,
+            image        : { type: 'jpeg', quality: 0.98 },
+            html2canvas  : { scale: 2, useCORS: true, letterRendering: true },
+            jsPDF        : { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        html2pdf().set(options).from(element).save().then(() => {
+            btn.innerHTML = '<i class="bi bi-file-earmark-pdf"></i> Télécharger PDF';
+            btn.disabled = false;
+        });
+    }
+</script>
+    <!-- Service Worker PWA -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(reg => console.log('SW enregistré:', reg.scope))
+            .catch(err => console.log('SW erreur:', err));
+        });
+      }
+    </script>
+</body>
+</html>

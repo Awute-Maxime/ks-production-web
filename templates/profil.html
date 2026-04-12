@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PWA -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#e94560">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="KS Production">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/icons/favicon-16x16.png">
+    <title>Mon Profil — KS Production</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root { --ks-primary: #1a1a2e; --ks-accent: #e94560; --ks-green: #00b894; }
+        body  { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
+
+        .sidebar { width: 200px; min-height: 100vh; background: var(--ks-primary); position: fixed; left: 0; top: 0; z-index: 100; display: flex; flex-direction: column; }
+        .brand { color: #fff; font-size: .95rem; font-weight: 700; padding: 14px 16px 12px; border-bottom: 1px solid rgba(255,255,255,.1); }
+        .brand span { color: var(--ks-accent); }
+        .brand small { display: block; font-size: .58rem; color: rgba(255,255,255,.3); font-weight: 400; }
+        .sidebar nav { flex: 1; padding: 8px 0; }
+        .nav-section { font-size: .58rem; text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,.28); padding: 10px 16px 3px; font-weight: 600; }
+        .nav-link { color: #aab4c4; padding: 8px 16px; display: flex; align-items: center; gap: 8px; font-size: .8rem; transition: all .2s; }
+        .nav-link:hover, .nav-link.active { color: #fff; background: var(--ks-accent); border-radius: 8px; margin: 0 6px; padding: 8px 10px; }
+        .nav-link i { font-size: .88rem; width: 16px; }
+        .sidebar-footer { padding: 8px 6px 14px; border-top: 1px solid rgba(255,255,255,.1); }
+
+        .main-content { margin-left: 200px; padding: 24px; max-width: 860px; }
+
+        .topbar { background: #fff; border-radius: 12px; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; box-shadow: 0 1px 6px rgba(0,0,0,.06); }
+        .topbar h5 { margin: 0; font-weight: 700; color: var(--ks-primary); font-size: .95rem; }
+
+        /* CARTE PROFIL */
+        .profil-card {
+            background: #fff; border-radius: 16px;
+            box-shadow: 0 1px 6px rgba(0,0,0,.06);
+            overflow: hidden; margin-bottom: 20px;
+        }
+        .profil-header {
+            background: linear-gradient(135deg, var(--ks-primary), #16213e);
+            padding: 28px 28px 60px; position: relative;
+        }
+        .profil-header .cover-text {
+            font-size: .75rem; color: rgba(255,255,255,.4);
+            text-transform: uppercase; letter-spacing: .1em;
+        }
+        .profil-avatar-wrap {
+            position: absolute; bottom: -36px; left: 28px;
+        }
+        .profil-avatar {
+            width: 72px; height: 72px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--ks-accent), #6c5ce7);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.8rem; color: #fff; font-weight: 800;
+            border: 4px solid #fff;
+            box-shadow: 0 4px 15px rgba(0,0,0,.15);
+        }
+        .profil-body { padding: 50px 28px 24px; }
+        .profil-name { font-size: 1.2rem; font-weight: 800; color: var(--ks-primary); }
+        .profil-role {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 3px 12px; border-radius: 20px; font-size: .72rem;
+            font-weight: 700; margin-top: 6px;
+        }
+        .role-admin  { background: #fdecea; color: var(--ks-accent); }
+        .role-caissier { background: #e0f2fe; color: #0369a1; }
+        .role-lecture  { background: #f3f4f6; color: #6b7280; }
+
+        .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 20px; }
+        .info-item { background: #f8f9fa; border-radius: 10px; padding: 14px; }
+        .info-item .lbl { font-size: .65rem; text-transform: uppercase; letter-spacing: .08em; color: #9ca3af; font-weight: 600; margin-bottom: 5px; }
+        .info-item .val { font-size: .88rem; font-weight: 700; color: var(--ks-primary); }
+
+        /* CARTE MOT DE PASSE */
+        .pwd-card {
+            background: #fff; border-radius: 16px;
+            box-shadow: 0 1px 6px rgba(0,0,0,.06);
+            padding: 24px 28px;
+        }
+        .card-title-section {
+            font-size: .78rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .08em; color: var(--ks-accent);
+            margin-bottom: 20px; padding-bottom: 10px;
+            border-bottom: 2px solid #fdecea;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .form-label { font-weight: 600; color: #444; font-size: .86rem; }
+        .input-group-text {
+            background: #f8f9fa; border: 1.5px solid #e0e0e0;
+            border-right: none; color: #9ca3af;
+        }
+        .form-control {
+            border: 1.5px solid #e0e0e0; border-left: none;
+            border-radius: 0 !important; padding: 10px 12px; font-size: .88rem;
+        }
+        .form-control:focus { border-color: var(--ks-accent); box-shadow: none; }
+        .input-group-text:first-child { border-radius: 8px 0 0 8px !important; }
+        .btn-eye {
+            background: #f8f9fa; border: 1.5px solid #e0e0e0;
+            border-left: none; border-radius: 0 8px 8px 0 !important;
+            color: #9ca3af; cursor: pointer; padding: 0 13px;
+        }
+        .btn-eye:hover { color: var(--ks-primary); }
+
+        /* RÈGLES MOT DE PASSE */
+        .pwd-rules { background: #f8f9fa; border-radius: 10px; padding: 14px 16px; margin-top: 6px; }
+        .pwd-rule { display: flex; align-items: center; gap: 8px; font-size: .78rem; color: #6b7280; padding: 3px 0; transition: color .2s; }
+        .pwd-rule i { font-size: .8rem; }
+        .pwd-rule.ok   { color: var(--ks-green); }
+        .pwd-rule.fail { color: #d63031; }
+
+        /* FORCE DU MOT DE PASSE */
+        .pwd-strength { margin-top: 8px; }
+        .pwd-strength .bar-wrap { height: 4px; background: #e5e7eb; border-radius: 2px; overflow: hidden; }
+        .pwd-strength .bar { height: 100%; border-radius: 2px; transition: width .3s, background .3s; }
+        .pwd-strength .label { font-size: .7rem; color: #9ca3af; margin-top: 4px; }
+
+        .btn-ks { background: var(--ks-accent); border: none; color: #fff; padding: 11px 28px; border-radius: 10px; font-weight: 700; transition: all .2s; }
+        .btn-ks:hover { background: #c0392b; color: #fff; transform: translateY(-1px); }
+
+        
+        /* ── RESPONSIVE MOBILE ── */
+        .hamburger-btn {
+            display: none; position: fixed; top: 12px; left: 12px; z-index: 200;
+            background: var(--ks-accent, #e94560); color: #fff; border: none;
+            border-radius: 10px; width: 40px; height: 40px; font-size: 1.1rem;
+            cursor: pointer; align-items: center; justify-content: center;
+            box-shadow: 0 3px 12px rgba(233,69,96,.4); transition: all .2s;
+        }
+        .hamburger-btn:hover { background: #c0392b; }
+        .sidebar-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,.5); z-index: 150; backdrop-filter: blur(2px);
+        }
+        .sidebar-overlay.active { display: block; }
+        @media (max-width: 768px) {
+            .hamburger-btn { display: flex; }
+            .sidebar { transform: translateX(-100%); transition: transform .3s ease; z-index: 160; width: 240px !important; }
+            .sidebar.open { transform: translateX(0); }
+            .main-content, .main { margin-left: 0 !important; padding: 12px !important; padding-top: 60px !important; }
+            .topbar { flex-wrap: wrap; gap: 8px; padding: 10px 12px 10px 60px !important; }
+            .topbar h5 { font-size: .85rem !important; }
+            .table-responsive { overflow-x: auto; }
+            .fac-table, .rel-table, .ops-table, .pai-table { min-width: 700px; }
+            .stats-row { flex-direction: column; }
+            .stat-mini { min-width: unset !important; }
+            .hide-mobile { display: none !important; }
+            .client-grid { grid-template-columns: 1fr !important; }
+            .cal-cell { min-height: 60px !important; }
+            .filter-bar { flex-wrap: wrap; gap: 8px !important; }
+            .filter-bar .form-select, .filter-bar .form-control { width: 100% !important; }
+            .modal-dialog { margin: 8px !important; max-width: calc(100vw - 16px) !important; }
+            .modal-body { max-height: 70vh; overflow-y: auto; }
+            .row.g-3 > .col-md-3, .row.g-3 > .col-md-4,
+            .row.g-2 > .col-md-4, .row.g-2 > .col-md-7,
+            .row.g-2 > .col-md-5, .row.g-2 > .col-md-8 { flex: 0 0 100%; max-width: 100%; }
+        }
+        @media (max-width: 480px) {
+            .topbar .d-flex { flex-wrap: wrap; }
+            .stat-card .val { font-size: .95rem !important; }
+        } .info-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="brand">🎵 KS <span>Production</span><small>Mon Profil</small></div>
+    <nav>
+        <div class="nav-section">Menu</div>
+        <a href="/dashboard"  class="nav-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        <a href="/factures"   class="nav-link"><i class="bi bi-receipt"></i> Factures</a>
+        <a href="/proformas"  class="nav-link"><i class="bi bi-file-earmark-text"></i> Proformas</a>
+        <a href="/operations" class="nav-link"><i class="bi bi-arrow-left-right"></i> Opérations</a>
+        <a href="/clients"    class="nav-link"><i class="bi bi-people"></i> Clients</a>
+        <div class="nav-section">Finance</div>
+        <a href="/paiements"  class="nav-link"><i class="bi bi-clock-history"></i> Paiements</a>
+        <a href="/relances" class="nav-link"><i class="bi bi-bell-fill"></i> Relances</a>
+        <a href="/rapport"    class="nav-link"><i class="bi bi-bar-chart-line"></i> Rapport</a>
+        {% if role == 'Administrateur' %}
+        <div class="nav-section">Admin</div>
+        <a href="/services"      class="nav-link"><i class="bi bi-grid"></i> Services</a>
+        <a href="/utilisateurs"  class="nav-link"><i class="bi bi-person-gear"></i> Utilisateurs</a>
+        <a href="/techniciens" class="nav-link"><i class="bi bi-people-fill"></i> Techniciens</a>
+        <a href="/parametres"    class="nav-link"><i class="bi bi-gear"></i> Paramètres</a>
+        <a href="/sauvegarde"    class="nav-link"><i class="bi bi-cloud-arrow-down"></i> Sauvegarde</a>
+        <a href="/reinitialiser" class="nav-link" style="color:#e74c3c;"><i class="bi bi-arrow-counterclockwise"></i> Réinitialiser</a>
+        {% endif %}
+    </nav>
+    <div class="sidebar-footer">
+        <a href="/profil" class="nav-link active"><i class="bi bi-person-circle"></i> Mon Profil</a>
+        <a href="/logout" class="nav-link" style="color:#e74c3c;"><i class="bi bi-box-arrow-left"></i> Déconnexion</a>
+    </div>
+</div>
+
+<button class="hamburger-btn" onclick="toggleSidebar()" id="hamburgerBtn">
+    <i class="bi bi-list" id="hamburgerIcon"></i>
+</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+
+<!-- MAIN -->
+<div class="main-content">
+
+    <div class="topbar">
+        <div>
+            <h5><i class="bi bi-person-circle me-2" style="color:var(--ks-accent);"></i>Mon Profil</h5>
+            <small class="text-muted">Informations personnelles et sécurité</small>
+        </div>
+        <a href="/dashboard" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Retour
+        </a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show mb-3">
+            {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endwith %}
+
+    <!-- CARTE PROFIL -->
+    <div class="profil-card">
+        <div class="profil-header">
+            <div class="cover-text">Compte utilisateur</div>
+            <div class="profil-avatar-wrap">
+                <div class="profil-avatar">{{ utilisateur.nom_complet[0].upper() if utilisateur.nom_complet else utilisateur.username[0].upper() }}</div>
+            </div>
+        </div>
+        <div class="profil-body">
+            <div class="profil-name">{{ utilisateur.nom_complet or utilisateur.username }}</div>
+            <div>
+                {% if role == 'Administrateur' %}
+                    <span class="profil-role role-admin"><i class="bi bi-shield-fill"></i> Administrateur</span>
+                {% elif role == 'Caissier' %}
+                    <span class="profil-role role-caissier"><i class="bi bi-cash"></i> Caissier</span>
+                {% else %}
+                    <span class="profil-role role-lecture"><i class="bi bi-eye"></i> Lecture seule</span>
+                {% endif %}
+            </div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="lbl">Identifiant</div>
+                    <div class="val"><i class="bi bi-person me-1" style="color:var(--ks-accent);"></i>{{ utilisateur.username }}</div>
+                </div>
+                <div class="info-item">
+                    <div class="lbl">Statut du compte</div>
+                    <div class="val">
+                        {% if utilisateur.statut == 'Actif' %}
+                        <span style="color:#00b894;">● Actif</span>
+                        {% else %}
+                        <span style="color:#d63031;">● Inactif</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="lbl">Rôle</div>
+                    <div class="val">{{ utilisateur.role }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHANGEMENT MOT DE PASSE -->
+    <div class="pwd-card">
+        <div class="card-title-section">
+            <i class="bi bi-lock-fill"></i> Changer le mot de passe
+        </div>
+
+        <form method="POST" action="/profil/changer-mdp" id="formMdp">
+            <div class="row g-3">
+
+                <!-- Ancien mot de passe -->
+                <div class="col-md-12">
+                    <label class="form-label">Mot de passe actuel <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                        <input type="password" class="form-control" name="ancien_mdp" id="ancienMdp"
+                               placeholder="Votre mot de passe actuel" required>
+                        <button type="button" class="btn-eye" onclick="togglePwd('ancienMdp', 'eye1')">
+                            <i class="bi bi-eye-fill" id="eye1"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Nouveau mot de passe -->
+                <div class="col-md-6">
+                    <label class="form-label">Nouveau mot de passe <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-key-fill"></i></span>
+                        <input type="password" class="form-control" name="nouveau_mdp" id="nouveauMdp"
+                               placeholder="Nouveau mot de passe" required
+                               oninput="verifierForce(); verifierRegles()">
+                        <button type="button" class="btn-eye" onclick="togglePwd('nouveauMdp', 'eye2')">
+                            <i class="bi bi-eye-fill" id="eye2"></i>
+                        </button>
+                    </div>
+                    <!-- Force du mot de passe -->
+                    <div class="pwd-strength mt-2">
+                        <div class="bar-wrap"><div class="bar" id="forceBar" style="width:0%;"></div></div>
+                        <div class="label" id="forceLabel">Entrez un mot de passe</div>
+                    </div>
+                </div>
+
+                <!-- Confirmer mot de passe -->
+                <div class="col-md-6">
+                    <label class="form-label">Confirmer le mot de passe <span class="text-danger">*</span></label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-key-fill"></i></span>
+                        <input type="password" class="form-control" name="confirmer_mdp" id="confirmerMdp"
+                               placeholder="Confirmer le nouveau mot de passe" required
+                               oninput="verifierCorrespondance()">
+                        <button type="button" class="btn-eye" onclick="togglePwd('confirmerMdp', 'eye3')">
+                            <i class="bi bi-eye-fill" id="eye3"></i>
+                        </button>
+                    </div>
+                    <div id="msgCorrespondance" style="font-size:.75rem; margin-top:5px;"></div>
+                </div>
+
+                <!-- Règles -->
+                <div class="col-12">
+                    <div class="pwd-rules">
+                        <div class="pwd-rule" id="regle-len"><i class="bi bi-circle"></i> Au moins 6 caractères</div>
+                        <div class="pwd-rule" id="regle-diff"><i class="bi bi-circle"></i> Différent de l'ancien mot de passe</div>
+                        <div class="pwd-rule" id="regle-match"><i class="bi bi-circle"></i> Les deux mots de passe correspondent</div>
+                    </div>
+                </div>
+
+                <!-- Bouton -->
+                <div class="col-12 mt-2">
+                    <button type="submit" class="btn-ks" id="btnSave" disabled>
+                        <i class="bi bi-check-lg me-2"></i>Enregistrer le nouveau mot de passe
+                    </button>
+                </div>
+
+            </div>
+        </form>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function togglePwd(inputId, iconId) {
+        const input = document.getElementById(inputId);
+        const icon  = document.getElementById(iconId);
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.className = 'bi bi-eye-slash-fill';
+        } else {
+            input.type = 'password';
+            icon.className = 'bi bi-eye-fill';
+        }
+    }
+
+    function verifierForce() {
+        const pwd   = document.getElementById('nouveauMdp').value;
+        const bar   = document.getElementById('forceBar');
+        const label = document.getElementById('forceLabel');
+
+        let score = 0;
+        if (pwd.length >= 6)  score++;
+        if (pwd.length >= 10) score++;
+        if (/[A-Z]/.test(pwd)) score++;
+        if (/[0-9]/.test(pwd)) score++;
+        if (/[^A-Za-z0-9]/.test(pwd)) score++;
+
+        const niveaux = [
+            { w: '0%',   bg: '#e5e7eb', txt: 'Entrez un mot de passe' },
+            { w: '20%',  bg: '#d63031', txt: '⚠ Très faible' },
+            { w: '40%',  bg: '#e17055', txt: '⚠ Faible' },
+            { w: '60%',  bg: '#f39c12', txt: '~ Moyen' },
+            { w: '80%',  bg: '#0984e3', txt: '✓ Fort' },
+            { w: '100%', bg: '#00b894', txt: '✓ Très fort' },
+        ];
+
+        const n = pwd.length === 0 ? 0 : Math.min(score + 1, 5);
+        bar.style.width      = niveaux[n].w;
+        bar.style.background = niveaux[n].bg;
+        label.textContent    = niveaux[n].txt;
+        label.style.color    = niveaux[n].bg;
+
+        verifierBouton();
+    }
+
+    function verifierRegles() {
+        const nouveau = document.getElementById('nouveauMdp').value;
+        const ancien  = document.getElementById('ancienMdp').value;
+
+        setRegle('regle-len',  nouveau.length >= 6);
+        setRegle('regle-diff', nouveau !== ancien || nouveau === '');
+        verifierCorrespondance();
+        verifierBouton();
+    }
+
+    function verifierCorrespondance() {
+        const nouveau   = document.getElementById('nouveauMdp').value;
+        const confirmer = document.getElementById('confirmerMdp').value;
+        const msg       = document.getElementById('msgCorrespondance');
+
+        const match = nouveau === confirmer && confirmer !== '';
+        setRegle('regle-match', match);
+
+        if (confirmer === '') {
+            msg.textContent = '';
+        } else if (match) {
+            msg.textContent = '✓ Les mots de passe correspondent';
+            msg.style.color = '#00b894';
+        } else {
+            msg.textContent = '✗ Les mots de passe ne correspondent pas';
+            msg.style.color = '#d63031';
+        }
+
+        verifierBouton();
+    }
+
+    function setRegle(id, ok) {
+        const el = document.getElementById(id);
+        el.classList.toggle('ok',   ok);
+        el.classList.toggle('fail', !ok);
+        el.querySelector('i').className = ok ? 'bi bi-check-circle-fill' : 'bi bi-x-circle-fill';
+    }
+
+    function verifierBouton() {
+        const nouveau   = document.getElementById('nouveauMdp').value;
+        const confirmer = document.getElementById('confirmerMdp').value;
+        const ancien    = document.getElementById('ancienMdp').value;
+        const btn       = document.getElementById('btnSave');
+
+        const ok = nouveau.length >= 6
+                && nouveau === confirmer
+                && ancien !== ''
+                && (nouveau !== ancien);
+
+        btn.disabled = !ok;
+        btn.style.opacity = ok ? '1' : '.5';
+    }
+</script>
+    <!-- Service Worker PWA -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(reg => console.log('SW enregistré:', reg.scope))
+            .catch(err => console.log('SW erreur:', err));
+        });
+      }
+    </script>
+</body>
+</html>

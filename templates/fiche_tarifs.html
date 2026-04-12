@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PWA -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#e94560">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="KS Production">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/icons/favicon-16x16.png">
+    <title>Fiche Tarifs — {{ params.nom_entreprise }}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --accent: {{ params.couleur_principale }};
+            --dark:   #1a1a2e;
+            --gray:   #6b7280;
+            --light:  #f9fafb;
+            --border: #e5e7eb;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { background: #eef0f4; font-family: 'Segoe UI', Arial, sans-serif; color: #374151; }
+
+        /* ── BARRE ACTIONS ── */
+        .action-bar {
+            background: var(--dark); padding: 10px 28px;
+            display: flex; justify-content: space-between; align-items: center;
+            position: sticky; top: 0; z-index: 100;
+        }
+        .action-bar .brand { color: #fff; font-weight: 700; font-size: 1rem; }
+        .action-bar .brand em { color: var(--accent); font-style: normal; }
+        .btn-act {
+            padding: 6px 14px; border-radius: 6px; font-size: .8rem;
+            cursor: pointer; border: 1.5px solid rgba(255,255,255,.3);
+            color: #fff; background: transparent; text-decoration: none;
+            display: inline-flex; align-items: center; gap: 5px;
+        }
+        .btn-act:hover { background: rgba(255,255,255,.12); color: #fff; }
+        .btn-print { background: var(--accent); border-color: var(--accent); padding: 6px 18px; }
+
+        /* ── PAGE ── */
+        .page-wrap { max-width: 794px; margin: 28px auto 60px; padding: 0 16px; }
+        .fiche {
+            background: #fff;
+            border-radius: 4px;
+            box-shadow: 0 2px 16px rgba(0,0,0,.08);
+            overflow: hidden;
+        }
+
+        /* Liseré coloré en haut */
+        .top-band {
+            height: 6px;
+            background: linear-gradient(90deg, var(--accent) 0%, #6c5ce7 50%, var(--accent) 100%);
+        }
+
+        .fiche-inner { padding: 40px 50px; }
+
+        /* ── ENTÊTE ── */
+        .entete {
+            display: flex; justify-content: space-between;
+            align-items: flex-start; margin-bottom: 30px;
+        }
+        .logo-zone { display: flex; flex-direction: column; align-items: flex-start; }
+        .logo-zone img { height: 72px; width: auto; object-fit: contain; margin-bottom: 10px; }
+        .logo-placeholder {
+            width: 64px; height: 64px; border-radius: 14px;
+            background: linear-gradient(135deg, var(--accent), #6c5ce7);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 1.6rem; margin-bottom: 10px;
+        }
+        .company-name { font-size: 1.3rem; font-weight: 800; color: var(--dark); }
+        .company-tag  { font-size: .74rem; color: var(--gray); margin-top: 2px; }
+        .company-contacts { margin-top: 8px; font-size: .72rem; color: #555; }
+        .company-contacts div { display: flex; align-items: center; gap: 5px; margin-bottom: 3px; }
+        .company-contacts i { color: var(--accent); font-size: .74rem; }
+
+        .titre-zone { text-align: right; }
+        .fiche-titre {
+            font-size: 1.8rem; font-weight: 900; color: var(--dark);
+            letter-spacing: -.02em; line-height: 1;
+        }
+        .fiche-sous-titre { font-size: .8rem; color: var(--accent); font-weight: 700; margin-top: 4px; }
+        .fiche-date { font-size: .72rem; color: var(--gray); margin-top: 4px; }
+
+        /* Badge "Document non contractuel" */
+        .non-contractuel {
+            display: inline-block; margin-top: 10px;
+            background: #fef3c7; color: #92400e;
+            border: 1px solid #fde68a; border-radius: 20px;
+            padding: 3px 12px; font-size: .68rem; font-weight: 600;
+        }
+
+        /* ── SÉPARATEUR DÉCORATIF ── */
+        .sep {
+            height: 3px; border-radius: 2px; margin: 0 0 28px;
+            background: linear-gradient(90deg, var(--accent), #6c5ce7, transparent);
+        }
+
+        /* ── SECTIONS SERVICES ── */
+        .section-block { margin-bottom: 28px; }
+
+        .section-header {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 18px; border-radius: 10px; margin-bottom: 14px;
+        }
+        .section-header.studio { background: linear-gradient(135deg, #0984e3, #6c5ce7); }
+        .section-header.sono   { background: linear-gradient(135deg, #e17055, #e94560); }
+        .section-header.autres { background: linear-gradient(135deg, #00b894, #00cec9); }
+
+        .section-icon {
+            width: 40px; height: 40px; border-radius: 10px;
+            background: rgba(255,255,255,.2);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 1.1rem; flex-shrink: 0;
+        }
+        .section-info .s-nom { font-size: .95rem; font-weight: 700; color: #fff; }
+        .section-info .s-desc { font-size: .72rem; color: rgba(255,255,255,.75); margin-top: 1px; }
+
+        /* GRILLE DE SERVICES */
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        .service-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 12px 16px; border-radius: 8px;
+            background: var(--light); border: 1px solid var(--border);
+            transition: all .2s;
+        }
+        .service-item:hover { border-color: var(--accent); background: #fff5f7; }
+        .service-nom { font-size: .85rem; font-weight: 600; color: var(--dark); }
+        .service-prix {
+            font-size: .85rem; font-weight: 800; color: var(--accent);
+            white-space: nowrap; margin-left: 12px;
+        }
+        .service-prix small { font-size: .62rem; color: var(--gray); font-weight: 400; display: block; text-align: right; }
+
+        /* ── MENTION DEVIS ── */
+        .mention-devis {
+            background: linear-gradient(135deg, var(--dark), #2d3436);
+            border-radius: 10px; padding: 16px 20px; margin-bottom: 24px;
+            display: flex; align-items: center; gap: 14px; color: #fff;
+        }
+        .mention-devis .icon-wrap {
+            width: 42px; height: 42px; border-radius: 10px;
+            background: var(--accent); display: flex; align-items: center;
+            justify-content: center; font-size: 1.1rem; flex-shrink: 0;
+        }
+        .mention-devis .md-title { font-size: .88rem; font-weight: 700; }
+        .mention-devis .md-text  { font-size: .72rem; color: rgba(255,255,255,.65); margin-top: 2px; }
+
+        /* ── PIED ── */
+        .fiche-footer {
+            border-top: 1px solid var(--border); padding-top: 18px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .footer-left { font-size: .7rem; color: #9ca3af; line-height: 1.6; }
+        .footer-right { text-align: right; }
+        .footer-right .contact-label { font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; color: var(--accent); font-weight: 700; margin-bottom: 4px; }
+        .footer-right .contact-info  { font-size: .78rem; color: var(--dark); font-weight: 600; }
+
+        /* ── PRINT ── */
+        @media print {
+            body { background: #fff !important; }
+            .action-bar { display: none !important; }
+            .page-wrap { margin: 0; padding: 0; max-width: 100%; }
+            .fiche { box-shadow: none; border-radius: 0; }
+            .fiche-inner { padding: 28px 36px; }
+            .service-item:hover { border-color: var(--border); background: var(--light); }
+            @page { margin: 8mm; size: A4; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- BARRE ACTIONS -->
+<div class="action-bar d-print-none">
+    <div class="brand">🎵 {{ params.nom_entreprise }} — <em>Fiche Tarifs</em></div>
+    <div style="display:flex; gap:8px;">
+        <a href="/services" class="btn-act"><i class="bi bi-arrow-left"></i> Retour</a>
+        <button onclick="window.print()" class="btn-act btn-print">
+            <i class="bi bi-printer"></i> Imprimer / PDF
+        </button>
+    </div>
+</div>
+
+<!-- FICHE -->
+<div class="page-wrap">
+<div class="fiche">
+    <div class="top-band"></div>
+    <div class="fiche-inner">
+
+        <!-- ENTÊTE -->
+        <div class="entete">
+            <div class="logo-zone">
+                {% if params.logo_filename %}
+                    <img src="/static/uploads/{{ params.logo_filename }}" alt="Logo">
+                {% else %}
+                    <div class="logo-placeholder">🎵</div>
+                {% endif %}
+                <div class="company-name">{{ params.nom_entreprise }}</div>
+                <div class="company-tag">{{ params.slogan }}</div>
+                <div class="company-contacts">
+                    {% if params.adresse %}
+                    <div><i class="bi bi-geo-alt-fill"></i> {{ params.adresse }}</div>
+                    {% endif %}
+                    {% if params.telephone %}
+                    <div><i class="bi bi-telephone-fill"></i> {{ params.telephone }}</div>
+                    {% endif %}
+                    {% if params.email %}
+                    <div><i class="bi bi-envelope-fill"></i> {{ params.email }}</div>
+                    {% endif %}
+                    {% if params.site_web %}
+                    <div><i class="bi bi-globe"></i> {{ params.site_web }}</div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="titre-zone">
+                <div class="fiche-titre">TARIFS</div>
+                <div class="fiche-sous-titre">Grille tarifaire {{ annee }}</div>
+                <div class="fiche-date">Mise à jour : {{ date_maj }}</div>
+                <div><span class="non-contractuel">⚠ Tarifs indicatifs — Devis sur demande</span></div>
+            </div>
+        </div>
+
+        <div class="sep"></div>
+
+        <!-- SECTION STUDIO -->
+        {% if services_studio %}
+        <div class="section-block">
+            <div class="section-header studio">
+                <div class="section-icon"><i class="bi bi-mic-fill"></i></div>
+                <div class="section-info">
+                    <div class="s-nom">Studio d'Enregistrement</div>
+                    <div class="s-desc">{{ services_studio|length }} prestation(s) disponible(s)</div>
+                </div>
+            </div>
+            <div class="services-grid">
+                {% for svc in services_studio %}
+                <div class="service-item">
+                    <span class="service-nom">{{ svc.libelle }}</span>
+                    <span class="service-prix">
+                        {{ "{:,.0f}".format(svc.prix).replace(',', ' ') }} FCFA
+                        <small>par prestation</small>
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- SECTION SONORISATION -->
+        {% if services_sono %}
+        <div class="section-block">
+            <div class="section-header sono">
+                <div class="section-icon"><i class="bi bi-speaker-fill"></i></div>
+                <div class="section-info">
+                    <div class="s-nom">Sonorisation & Événementiel</div>
+                    <div class="s-desc">{{ services_sono|length }} prestation(s) disponible(s)</div>
+                </div>
+            </div>
+            <div class="services-grid">
+                {% for svc in services_sono %}
+                <div class="service-item">
+                    <span class="service-nom">{{ svc.libelle }}</span>
+                    <span class="service-prix">
+                        {{ "{:,.0f}".format(svc.prix).replace(',', ' ') }} FCFA
+                        <small>par événement</small>
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- SECTION AUTRES -->
+        {% if services_autres %}
+        <div class="section-block">
+            <div class="section-header autres">
+                <div class="section-icon"><i class="bi bi-collection-fill"></i></div>
+                <div class="section-info">
+                    <div class="s-nom">Autres Prestations</div>
+                    <div class="s-desc">{{ services_autres|length }} prestation(s) disponible(s)</div>
+                </div>
+            </div>
+            <div class="services-grid">
+                {% for svc in services_autres %}
+                <div class="service-item">
+                    <span class="service-nom">{{ svc.libelle }}</span>
+                    <span class="service-prix">
+                        {{ "{:,.0f}".format(svc.prix).replace(',', ' ') }} FCFA
+                        <small>par prestation</small>
+                    </span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- MENTION DEVIS -->
+        <div class="mention-devis">
+            <div class="icon-wrap"><i class="bi bi-chat-quote-fill"></i></div>
+            <div>
+                <div class="md-title">Besoin d'un devis personnalisé ?</div>
+                <div class="md-text">Ces tarifs sont indicatifs. Contactez-nous pour un devis adapté à votre projet et à vos besoins spécifiques.</div>
+            </div>
+        </div>
+
+        <!-- PIED -->
+        <div class="fiche-footer">
+            <div class="footer-left">
+                Les tarifs indiqués sont en Francs CFA (FCFA).<br>
+                {% if params.nif %}NIF : {{ params.nif }} — {% endif %}
+                {% if params.rccm %}RCCM : {{ params.rccm }}{% endif %}<br>
+                {{ params.mentions_legales or 'Paiement à réception de facture.' }}
+            </div>
+            <div class="footer-right">
+                <div class="contact-label">Nous contacter</div>
+                {% if params.telephone %}<div class="contact-info"><i class="bi bi-telephone"></i> {{ params.telephone }}</div>{% endif %}
+                {% if params.email %}<div class="contact-info"><i class="bi bi-envelope"></i> {{ params.email }}</div>{% endif %}
+            </div>
+        </div>
+
+    </div>
+</div>
+</div>
+
+    <!-- Service Worker PWA -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(reg => console.log('SW enregistré:', reg.scope))
+            .catch(err => console.log('SW erreur:', err));
+        });
+      }
+    </script>
+</body>
+</html>

@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PWA -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#e94560">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="KS Production">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/icons/favicon-16x16.png">
+    <title>Modifier Proforma {{ proforma.numero }} — KS Production</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root { --ks-primary: #1a1a2e; --ks-accent: #e94560; --ks-purple: #6c5ce7; }
+        body  { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
+        .sidebar { width: 200px; min-height: 100vh; background: var(--ks-primary); position: fixed; left: 0; top: 0; z-index: 100; display: flex; flex-direction: column; }
+        .brand { color: #fff; font-size: .95rem; font-weight: 700; padding: 14px 16px 12px; border-bottom: 1px solid rgba(255,255,255,.1); }
+        .brand span { color: var(--ks-accent); }
+        .brand small { display: block; font-size: .58rem; color: rgba(255,255,255,.3); font-weight: 400; }
+        .sidebar nav { flex: 1; padding: 8px 0; }
+        .nav-section { font-size: .58rem; text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,.28); padding: 10px 16px 3px; font-weight: 600; }
+        .nav-link { color: #aab4c4; padding: 8px 16px; display: flex; align-items: center; gap: 8px; font-size: .8rem; transition: all .2s; }
+        .nav-link:hover, .nav-link.active { color: #fff; background: var(--ks-accent); border-radius: 8px; margin: 0 6px; padding: 8px 10px; }
+        .nav-link i { font-size: .88rem; width: 16px; }
+        .sidebar-footer { padding: 8px 6px 14px; border-top: 1px solid rgba(255,255,255,.1); }
+        .main-content { margin-left: 200px; padding: 20px; }
+        .topbar { background: #fff; border-radius: 12px; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; box-shadow: 0 1px 6px rgba(0,0,0,.06); }
+        .topbar h5 { margin: 0; font-weight: 700; color: var(--ks-primary); }
+
+        /* Bannière modifier */
+        .modifier-banner {
+            background: linear-gradient(135deg, #f39c12, #e17055);
+            border-radius: 12px; padding: 14px 20px; margin-bottom: 20px;
+            display: flex; align-items: center; gap: 12px; color: #fff;
+        }
+        .modifier-banner i { font-size: 1.4rem; }
+        .modifier-banner .pb-title { font-size: .9rem; font-weight: 700; }
+        .modifier-banner .pb-desc  { font-size: .75rem; opacity: .85; margin-top: 2px; }
+
+        .form-card { background: #fff; border-radius: 14px; padding: 22px 28px; box-shadow: 0 1px 6px rgba(0,0,0,.06); margin-bottom: 20px; }
+        .section-title { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--ks-purple); margin-bottom: 16px; padding-bottom: 8px; border-bottom: 2px solid #ede9fe; display: flex; align-items: center; gap: 8px; }
+        .form-label { font-weight: 600; color: #444; font-size: .88rem; }
+        .form-control, .form-select { border-radius: 8px; border: 1.5px solid #e0e0e0; padding: 9px 13px; font-size: .88rem; transition: border-color .2s; }
+        .form-control:focus, .form-select:focus { border-color: var(--ks-purple); box-shadow: 0 0 0 3px rgba(108,92,231,.15); }
+
+        .lignes-table { width: 100%; border-collapse: collapse; }
+        .lignes-table thead tr { background: var(--ks-primary); color: #fff; }
+        .lignes-table thead th { padding: 10px 12px; font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; font-weight: 600; }
+        .lignes-table tbody tr { border-bottom: 1px solid #f0f0f0; }
+        .lignes-table tbody td { padding: 8px; vertical-align: middle; }
+        .lignes-table .form-control { border-radius: 6px; padding: 7px 10px; font-size: .84rem; }
+
+        .btn-add-ligne { background: #ede9fe; color: var(--ks-purple); border: 1.5px dashed var(--ks-purple); border-radius: 8px; padding: 9px 18px; font-size: .85rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all .2s; }
+        .btn-add-ligne:hover { background: var(--ks-purple); color: #fff; }
+        .btn-del-ligne { background: #fdecea; color: #d63031; border: none; border-radius: 6px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all .2s; }
+        .btn-del-ligne:hover { background: #d63031; color: #fff; }
+
+        .recap-box { background: #f5f3ff; border-radius: 10px; padding: 16px 20px; border-left: 4px solid var(--ks-purple); }
+        .recap-row { display: flex; justify-content: space-between; padding: 5px 0; font-size: .88rem; }
+        .recap-row .lbl { color: #6c757d; }
+        .recap-row .val { font-weight: 600; color: var(--ks-primary); }
+        .recap-row.total { border-top: 1.5px solid #dee2e6; margin-top: 6px; padding-top: 10px; }
+        .recap-row.total .val { color: var(--ks-purple); font-size: 1.1rem; }
+
+        .btn-orange { background: linear-gradient(135deg, #f39c12, #e17055); border: none; color: #fff; }
+        .btn-orange:hover { background: linear-gradient(135deg, #e67e22, #c0392b); color: #fff; }
+
+        .svc-chip { background: #ede9fe; border: 1px solid #c4b5fd; border-radius: 20px; padding: 3px 10px; font-size: .75rem; cursor: pointer; transition: all .15s; color: var(--ks-purple); margin: 2px; display: inline-block; }
+        .svc-chip:hover { background: var(--ks-purple); color: #fff; }
+
+        .info-badge { display: inline-flex; align-items: center; gap: 6px; background: #ede9fe; color: var(--ks-purple); padding: 5px 12px; border-radius: 20px; font-size: .78rem; font-weight: 600; }
+
+        
+        /* ── RESPONSIVE MOBILE ── */
+        .hamburger-btn {
+            display: none; position: fixed; top: 12px; left: 12px; z-index: 200;
+            background: var(--ks-accent, #e94560); color: #fff; border: none;
+            border-radius: 10px; width: 40px; height: 40px; font-size: 1.1rem;
+            cursor: pointer; align-items: center; justify-content: center;
+            box-shadow: 0 3px 12px rgba(233,69,96,.4); transition: all .2s;
+        }
+        .hamburger-btn:hover { background: #c0392b; }
+        .sidebar-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,.5); z-index: 150; backdrop-filter: blur(2px);
+        }
+        .sidebar-overlay.active { display: block; }
+        @media (max-width: 768px) {
+            .hamburger-btn { display: flex; }
+            .sidebar { transform: translateX(-100%); transition: transform .3s ease; z-index: 160; width: 240px !important; }
+            .sidebar.open { transform: translateX(0); }
+            .main-content, .main { margin-left: 0 !important; padding: 12px !important; padding-top: 60px !important; }
+            .topbar { flex-wrap: wrap; gap: 8px; padding: 10px 12px 10px 60px !important; }
+            .topbar h5 { font-size: .85rem !important; }
+            .table-responsive { overflow-x: auto; }
+            .fac-table, .rel-table, .ops-table, .pai-table { min-width: 700px; }
+            .stats-row { flex-direction: column; }
+            .stat-mini { min-width: unset !important; }
+            .hide-mobile { display: none !important; }
+            .client-grid { grid-template-columns: 1fr !important; }
+            .cal-cell { min-height: 60px !important; }
+            .filter-bar { flex-wrap: wrap; gap: 8px !important; }
+            .filter-bar .form-select, .filter-bar .form-control { width: 100% !important; }
+            .modal-dialog { margin: 8px !important; max-width: calc(100vw - 16px) !important; }
+            .modal-body { max-height: 70vh; overflow-y: auto; }
+            .row.g-3 > .col-md-3, .row.g-3 > .col-md-4,
+            .row.g-2 > .col-md-4, .row.g-2 > .col-md-7,
+            .row.g-2 > .col-md-5, .row.g-2 > .col-md-8 { flex: 0 0 100%; max-width: 100%; }
+        }
+        @media (max-width: 480px) {
+            .topbar .d-flex { flex-wrap: wrap; }
+            .stat-card .val { font-size: .95rem !important; }
+        } }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="brand">🎵 KS <span>Production</span><small>Modifier proforma</small></div>
+    <nav>
+        <div class="nav-section">Menu</div>
+        <a href="/dashboard"  class="nav-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        <a href="/factures"   class="nav-link"><i class="bi bi-receipt"></i> Factures</a>
+        <a href="/proformas"  class="nav-link active"><i class="bi bi-file-earmark-text"></i> Proformas</a>
+        <a href="/operations" class="nav-link"><i class="bi bi-arrow-left-right"></i> Opérations</a>
+        <a href="/clients"    class="nav-link"><i class="bi bi-people"></i> Clients</a>
+        <div class="nav-section">Finance</div>
+        <a href="/paiements"  class="nav-link"><i class="bi bi-clock-history"></i> Paiements</a>
+        <a href="/relances" class="nav-link"><i class="bi bi-bell-fill"></i> Relances</a>
+        <a href="/rapport"    class="nav-link"><i class="bi bi-bar-chart-line"></i> Rapport</a>
+        {% if role == 'Administrateur' %}
+        <div class="nav-section">Admin</div>
+        <a href="/services"      class="nav-link"><i class="bi bi-grid"></i> Services</a>
+        <a href="/utilisateurs"  class="nav-link"><i class="bi bi-person-gear"></i> Utilisateurs</a>
+        <a href="/techniciens" class="nav-link"><i class="bi bi-people-fill"></i> Techniciens</a>
+        <a href="/parametres"    class="nav-link"><i class="bi bi-gear"></i> Paramètres</a>
+        <a href="/sauvegarde"    class="nav-link"><i class="bi bi-cloud-arrow-down"></i> Sauvegarde</a>
+        <a href="/reinitialiser" class="nav-link" style="color:#e74c3c;"><i class="bi bi-arrow-counterclockwise"></i> Réinitialiser</a>
+        {% endif %}
+    </nav>
+    <div class="sidebar-footer">
+        <a href="/profil" class="nav-link"><i class="bi bi-person-circle"></i> Mon Profil</a>
+        <a href="/logout" class="nav-link" style="color:#e74c3c;"><i class="bi bi-box-arrow-left"></i> Déconnexion</a>
+    </div>
+</div>
+
+<button class="hamburger-btn" onclick="toggleSidebar()" id="hamburgerBtn">
+    <i class="bi bi-list" id="hamburgerIcon"></i>
+</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+
+<!-- MAIN -->
+<div class="main-content">
+
+    <div class="topbar">
+        <div>
+            <h5><i class="bi bi-pencil-square me-2" style="color:#f39c12;"></i>Modifier la Proforma</h5>
+            <small class="text-muted">Mise à jour du document proforma</small>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <span class="info-badge"><i class="bi bi-file-earmark-text"></i> {{ proforma.numero }}</span>
+            <a href="/proformas" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left me-1"></i>Retour
+            </a>
+        </div>
+    </div>
+
+    <!-- BANNIÈRE -->
+    <div class="modifier-banner">
+        <i class="bi bi-pencil-square"></i>
+        <div>
+            <div class="pb-title">Modification de la proforma {{ proforma.numero }}</div>
+            <div class="pb-desc">Client : {{ proforma.nom_client }} — Créée le {{ proforma.date.strftime('%d/%m/%Y') }} — Montant actuel : {{ "{:,.0f}".format(proforma.montant_ttc).replace(',', ' ') }} FCFA</div>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show mb-3">
+            {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endwith %}
+
+    <form method="POST" action="/proformas/modifier/{{ proforma.id }}">
+
+        <!-- INFOS -->
+        <div class="form-card">
+            <div class="section-title"><i class="bi bi-info-circle"></i> Informations</div>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">N° Proforma</label>
+                    <input type="text" class="form-control" value="{{ proforma.numero }}" readonly
+                           style="background:#f5f3ff; font-weight:600; color:var(--ks-purple);">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Date</label>
+                    <input type="date" class="form-control" name="date"
+                           value="{{ proforma.date.strftime('%Y-%m-%d') }}" readonly
+                           style="background:#f8f9fa;">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Section <span class="text-danger">*</span></label>
+                    <select class="form-select" name="section" required>
+                        <option value="Studio"       {% if proforma.section == 'Studio' %}selected{% endif %}>Studio</option>
+                        <option value="Sonorisation"  {% if proforma.section == 'Sonorisation' %}selected{% endif %}>Sonorisation</option>
+                        <option value="Général"       {% if proforma.section == 'Général' %}selected{% endif %}>Général</option>
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Client <span class="text-danger">*</span></label>
+                    <div class="d-flex gap-2">
+                        <select class="form-select" id="selectClient" onchange="remplirClient()">
+                            <option value="">-- Client existant --</option>
+                            {% for client in clients %}
+                            <option value="{{ client.nom }}"
+                                {% if client.nom == proforma.nom_client %}selected{% endif %}>
+                                {{ client.nom }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <input type="text" class="form-control" name="nom_client" id="nom_client"
+                               value="{{ proforma.nom_client }}" required>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">TVA</label>
+                    <select class="form-select" name="tva_taux" id="tvaTaux" onchange="updateRecap()">
+                        <option value="18">TVA 18%</option>
+                        <option value="0">Sans TVA (0%)</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Mode paiement prévu</label>
+                    <select class="form-select" name="mode_paiement">
+                        <option value="Espece"        {% if proforma.mode_paiement == 'Espece' %}selected{% endif %}>Espèce</option>
+                        <option value="Carte Bancaire" {% if proforma.mode_paiement == 'Carte Bancaire' %}selected{% endif %}>Carte Bancaire</option>
+                        <option value="Virement"       {% if proforma.mode_paiement == 'Virement' %}selected{% endif %}>Virement</option>
+                        <option value="Mobile Money"   {% if proforma.mode_paiement == 'Mobile Money' %}selected{% endif %}>Mobile Money</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- LIGNES -->
+        <div class="form-card">
+            <div class="section-title"><i class="bi bi-list-ul"></i> Prestations</div>
+            <div class="mb-3">
+                {% for svc in services_list %}
+                <span class="svc-chip" onclick="ajouterLigneRapide('{{ svc.libelle }}', {{ svc.prix }})">+ {{ svc.libelle }}</span>
+                {% endfor %}
+            </div>
+            <div class="table-responsive">
+                <table class="lignes-table">
+                    <thead>
+                        <tr>
+                            <th style="width:42%;">Description</th>
+                            <th style="width:10%; text-align:center;">Qté</th>
+                            <th style="width:20%; text-align:right;">Prix HT (FCFA)</th>
+                            <th style="width:20%; text-align:right;">Total HT (FCFA)</th>
+                            <th style="width:8%;"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="lignesBody">
+                        {% for ligne in lignes %}
+                        <tr class="ligne-row">
+                            <td><input type="text" class="form-control svc-input" name="service[]"
+                                       value="{{ ligne.service }}" required></td>
+                            <td><input type="number" class="form-control qty-input" name="quantite[]"
+                                       value="{{ ligne.quantite }}" min="1" style="text-align:center;"></td>
+                            <td><input type="number" class="form-control pu-input" name="prix_unitaire[]"
+                                       value="{{ ligne.prix_unitaire }}" min="0" step="any" style="text-align:right;"></td>
+                            <td><input type="text" class="form-control total-input"
+                                       value="{{ "{:,.0f}".format(ligne.montant_ht).replace(',', ' ') }}"
+                                       readonly style="text-align:right; background:#f5f3ff; font-weight:600;"></td>
+                            <td style="text-align:center;">
+                                <button type="button" class="btn-del-ligne" onclick="supprimerLigne(this)">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr class="ligne-row">
+                            <td><input type="text" class="form-control svc-input" name="service[]" placeholder="Ex: Sonorisation" required></td>
+                            <td><input type="number" class="form-control qty-input" name="quantite[]" value="1" min="1" style="text-align:center;"></td>
+                            <td><input type="number" class="form-control pu-input" name="prix_unitaire[]" placeholder="0" min="0" step="any" style="text-align:right;"></td>
+                            <td><input type="text" class="form-control total-input" readonly style="text-align:right; background:#f5f3ff; font-weight:600;"></td>
+                            <td style="text-align:center;"><button type="button" class="btn-del-ligne" onclick="supprimerLigne(this)"><i class="bi bi-trash"></i></button></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="mt-3">
+                <button type="button" class="btn-add-ligne" onclick="ajouterLigne()">
+                    <i class="bi bi-plus-circle"></i> Ajouter une ligne
+                </button>
+            </div>
+        </div>
+
+        <!-- RECAP -->
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="form-card h-100">
+                    <div class="section-title"><i class="bi bi-sticky"></i> Notes / Conditions</div>
+                    <textarea class="form-control" name="notes" rows="4"
+                              placeholder="Validité du devis, conditions particulières, délais..."></textarea>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-card">
+                    <div class="section-title"><i class="bi bi-calculator"></i> Récapitulatif</div>
+
+                    <div class="recap-box">
+                        <div class="recap-row"><span class="lbl">Sous-total HT</span><span class="val" id="recapHT">0 FCFA</span></div>
+                        <div class="recap-row"><span class="lbl">TVA (<span id="tauxLabel">18</span>%)</span><span class="val" id="recapTVA">0 FCFA</span></div>
+                        <div class="recap-row total"><span class="lbl fw-bold">NOUVEAU TOTAL TTC</span><span class="val" id="recapTTC">0 FCFA</span></div>
+                    </div>
+                    <div class="d-flex gap-3 mt-4">
+                        <button type="submit" class="btn btn-orange px-4 flex-fill">
+                            <i class="bi bi-check-lg me-2"></i>Enregistrer les modifications
+                        </button>
+                        <a href="/proformas" class="btn btn-outline-secondary px-3">
+                            <i class="bi bi-x-lg"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function remplirClient() {
+        const val = document.getElementById('selectClient').value;
+        if (val) document.getElementById('nom_client').value = val;
+    }
+
+    function formatNum(n) { return n > 0 ? Math.round(n).toLocaleString('fr-FR') : '0'; }
+
+    function updateRecap() {
+        const tvaRate = parseFloat(document.getElementById('tvaTaux').value) / 100 || 0;
+        document.getElementById('tauxLabel').textContent = document.getElementById('tvaTaux').value;
+        let totalHT = 0;
+        document.querySelectorAll('.ligne-row').forEach(row => {
+            const pu  = parseFloat(row.querySelector('.pu-input').value)  || 0;
+            const qty = parseInt(row.querySelector('.qty-input').value)   || 1;
+            const ht  = pu * qty;
+            row.querySelector('.total-input').value = ht > 0 ? formatNum(ht) : '';
+            totalHT += ht;
+        });
+        const tva = totalHT * tvaRate;
+        const ttc = totalHT + tva;
+        document.getElementById('recapHT').textContent  = formatNum(totalHT) + ' FCFA';
+        document.getElementById('recapTVA').textContent = formatNum(tva)     + ' FCFA';
+        document.getElementById('recapTTC').textContent = formatNum(ttc)     + ' FCFA';
+    }
+
+    function attachListeners(row) {
+        row.querySelector('.pu-input').addEventListener('input',  updateRecap);
+        row.querySelector('.qty-input').addEventListener('input', updateRecap);
+    }
+
+    function ajouterLigne(service = '', prix = 0) {
+        const tbody = document.getElementById('lignesBody');
+        const tr = document.createElement('tr');
+        tr.className = 'ligne-row';
+        tr.innerHTML = `
+            <td><input type="text" class="form-control svc-input" name="service[]" value="${service}" placeholder="Ex: Mixage" required></td>
+            <td><input type="number" class="form-control qty-input" name="quantite[]" value="1" min="1" style="text-align:center;"></td>
+            <td><input type="number" class="form-control pu-input" name="prix_unitaire[]" value="${prix}" min="0" step="any" style="text-align:right;"></td>
+            <td><input type="text" class="form-control total-input" value="${prix > 0 ? formatNum(prix) : ''}" readonly style="text-align:right; background:#f5f3ff; font-weight:600;"></td>
+            <td style="text-align:center;"><button type="button" class="btn-del-ligne" onclick="supprimerLigne(this)"><i class="bi bi-trash"></i></button></td>`;
+        tbody.appendChild(tr);
+        attachListeners(tr);
+        updateRecap();
+    }
+
+    function ajouterLigneRapide(service, prix) { ajouterLigne(service, prix); }
+
+    function supprimerLigne(btn) {
+        if (document.querySelectorAll('.ligne-row').length <= 1) {
+            alert('Au moins une ligne est requise.'); return;
+        }
+        btn.closest('tr').remove();
+        updateRecap();
+    }
+
+    // Init
+    document.querySelectorAll('.ligne-row').forEach(attachListeners);
+    updateRecap();
+</script>
+    <!-- Service Worker PWA -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(reg => console.log('SW enregistré:', reg.scope))
+            .catch(err => console.log('SW erreur:', err));
+        });
+      }
+    </script>
+</body>
+</html>

@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PWA -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#e94560">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="KS Production">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/icons/favicon-16x16.png">
+    <title>Paramètres — KS Production</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root { --ks-primary: #1a1a2e; --ks-accent: #e94560; }
+        body  { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
+
+        .sidebar {
+            width: 200px; min-height: 100vh; background: var(--ks-primary);
+            position: fixed; left: 0; top: 0; z-index: 100; display: flex; flex-direction: column;
+        }
+        .brand { color: #fff; font-size: .95rem; font-weight: 700; padding: 14px 16px 12px; border-bottom: 1px solid rgba(255,255,255,.1); }
+        .brand span { color: var(--ks-accent); }
+        .brand small { display: block; font-size: .58rem; color: rgba(255,255,255,.3); font-weight: 400; }
+        .sidebar nav { flex: 1; padding: 8px 0; }
+        .nav-section { font-size: .58rem; text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,.28); padding: 10px 16px 3px; font-weight: 600; }
+        .nav-link { color: #aab4c4; padding: 8px 16px; display: flex; align-items: center; gap: 8px; font-size: .8rem; transition: all .2s; }
+        .nav-link:hover, .nav-link.active { color: #fff; background: var(--ks-accent); border-radius: 8px; margin: 0 6px; padding: 8px 10px; }
+        .nav-link i { font-size: .88rem; width: 16px; }
+        .sidebar-footer { padding: 8px 6px 14px; border-top: 1px solid rgba(255,255,255,.1); }
+
+        .main-content { margin-left: 200px; padding: 20px; }
+
+        .topbar {
+            background: #fff; border-radius: 12px; padding: 12px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; box-shadow: 0 1px 6px rgba(0,0,0,.06);
+        }
+        .topbar h5 { margin: 0; font-weight: 700; color: var(--ks-primary); font-size: .95rem; }
+
+        /* ONGLETS */
+        .tabs-bar {
+            background: #fff; border-radius: 12px; padding: 6px;
+            margin-bottom: 20px; box-shadow: 0 1px 6px rgba(0,0,0,.06);
+            display: flex; gap: 4px;
+        }
+        .tab-btn {
+            flex: 1; padding: 10px 16px; border: none; border-radius: 8px;
+            background: transparent; font-size: .82rem; font-weight: 600;
+            color: #6b7280; cursor: pointer; transition: all .2s;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+        }
+        .tab-btn:hover { background: #f0f2f5; color: var(--ks-primary); }
+        .tab-btn.active { background: var(--ks-accent); color: #fff; }
+
+        /* SECTIONS */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* CARDS */
+        .param-card {
+            background: #fff; border-radius: 14px; padding: 24px;
+            box-shadow: 0 1px 6px rgba(0,0,0,.06); margin-bottom: 20px;
+        }
+        .card-title {
+            font-size: .75rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .08em; color: var(--ks-accent);
+            margin-bottom: 18px; padding-bottom: 10px;
+            border-bottom: 2px solid #fdecea;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .form-label { font-weight: 600; color: #444; font-size: .86rem; }
+        .form-control, .form-select {
+            border-radius: 8px; border: 1.5px solid #e0e0e0;
+            padding: 9px 13px; font-size: .86rem; transition: border-color .2s;
+        }
+        .form-control:focus, .form-select:focus {
+            border-color: var(--ks-accent); box-shadow: 0 0 0 3px #e9456022;
+        }
+        .form-text { font-size: .75rem; color: #9ca3af; margin-top: 4px; }
+        .badge-opt { background: #f0f2f5; color: #6b7280; font-size: .68rem; padding: 2px 7px; border-radius: 10px; margin-left: 4px; }
+
+        /* LOGO */
+        .logo-preview-zone {
+            border: 2px dashed #e0e0e0; border-radius: 12px; padding: 20px;
+            text-align: center; background: #fafafa; position: relative; cursor: pointer; transition: all .2s;
+        }
+        .logo-preview-zone:hover { border-color: var(--ks-accent); background: #fff5f7; }
+        .logo-preview-zone input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+        .logo-preview-zone .upload-icon { font-size: 2rem; color: #ccc; margin-bottom: 8px; }
+        .logo-preview-zone .upload-text { font-size: .82rem; color: #888; }
+        .logo-preview-zone .upload-fmt  { font-size: .72rem; color: #bbb; margin-top: 3px; }
+
+        .logo-actuel {
+            background: #f8f9fa; border-radius: 10px; padding: 14px 18px;
+            display: flex; align-items: center; gap: 16px; margin-bottom: 14px;
+        }
+        .logo-actuel img { height: 60px; width: auto; object-fit: contain; border-radius: 6px; }
+        .logo-actuel .logo-info .nom { font-size: .85rem; font-weight: 600; color: var(--ks-primary); }
+        .logo-actuel .logo-info .fichier { font-size: .72rem; color: #9ca3af; margin-top: 2px; }
+
+        /* COULEURS */
+        .color-picker-wrap { display: flex; align-items: center; gap: 12px; }
+        .color-picker-wrap input[type=color] { width: 48px; height: 38px; border-radius: 8px; border: 1.5px solid #e0e0e0; cursor: pointer; padding: 2px; }
+        .swatches { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+        .swatch { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: all .15s; }
+        .swatch:hover { transform: scale(1.2); border-color: #555; }
+        .swatch.selected { border-color: var(--ks-primary); transform: scale(1.15); }
+
+        /* APERÇU CARTE VISITE */
+        .business-card {
+            border-radius: 12px; overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,.12);
+        }
+        .bc-header {
+            padding: 20px 24px; color: #fff;
+            display: flex; align-items: center; gap: 14px;
+        }
+        .bc-logo { width: 52px; height: 52px; border-radius: 10px; overflow: hidden; background: rgba(255,255,255,.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .bc-logo img { width: 100%; height: 100%; object-fit: contain; }
+        .bc-logo-txt { font-size: 1.3rem; color: #fff; }
+        .bc-nom { font-size: 1rem; font-weight: 700; }
+        .bc-slogan { font-size: .72rem; opacity: .8; margin-top: 1px; }
+        .bc-body { background: #fff; padding: 16px 24px; }
+        .bc-info { display: flex; align-items: center; gap: 8px; font-size: .78rem; color: #555; margin-bottom: 6px; }
+        .bc-info i { width: 14px; }
+
+        /* TVA */
+        .tva-options { display: flex; gap: 10px; }
+        .tva-opt {
+            flex: 1; padding: 12px; border-radius: 10px; border: 2px solid #e0e0e0;
+            background: #f8f9fa; cursor: pointer; text-align: center; transition: all .2s;
+        }
+        .tva-opt:hover { border-color: #aaa; }
+        .tva-opt.selected { border-color: var(--ks-accent); background: #fff5f7; }
+        .tva-opt .tva-val { font-size: 1.2rem; font-weight: 800; color: var(--ks-primary); }
+        .tva-opt .tva-lbl { font-size: .72rem; color: #6b7280; margin-top: 2px; }
+
+        .btn-ks { background: var(--ks-accent); border: none; color: #fff; }
+        .btn-ks:hover { background: #c0392b; color: #fff; }
+
+        
+        /* ── RESPONSIVE MOBILE ── */
+        .hamburger-btn {
+            display: none; position: fixed; top: 12px; left: 12px; z-index: 200;
+            background: var(--ks-accent, #e94560); color: #fff; border: none;
+            border-radius: 10px; width: 40px; height: 40px; font-size: 1.1rem;
+            cursor: pointer; align-items: center; justify-content: center;
+            box-shadow: 0 3px 12px rgba(233,69,96,.4); transition: all .2s;
+        }
+        .hamburger-btn:hover { background: #c0392b; }
+        .sidebar-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,.5); z-index: 150; backdrop-filter: blur(2px);
+        }
+        .sidebar-overlay.active { display: block; }
+        @media (max-width: 768px) {
+            .hamburger-btn { display: flex; }
+            .sidebar { transform: translateX(-100%); transition: transform .3s ease; z-index: 160; width: 240px !important; }
+            .sidebar.open { transform: translateX(0); }
+            .main-content, .main { margin-left: 0 !important; padding: 12px !important; padding-top: 60px !important; }
+            .topbar { flex-wrap: wrap; gap: 8px; padding: 10px 12px 10px 60px !important; }
+            .topbar h5 { font-size: .85rem !important; }
+            .table-responsive { overflow-x: auto; }
+            .fac-table, .rel-table, .ops-table, .pai-table { min-width: 700px; }
+            .stats-row { flex-direction: column; }
+            .stat-mini { min-width: unset !important; }
+            .hide-mobile { display: none !important; }
+            .client-grid { grid-template-columns: 1fr !important; }
+            .cal-cell { min-height: 60px !important; }
+            .filter-bar { flex-wrap: wrap; gap: 8px !important; }
+            .filter-bar .form-select, .filter-bar .form-control { width: 100% !important; }
+            .modal-dialog { margin: 8px !important; max-width: calc(100vw - 16px) !important; }
+            .modal-body { max-height: 70vh; overflow-y: auto; }
+            .row.g-3 > .col-md-3, .row.g-3 > .col-md-4,
+            .row.g-2 > .col-md-4, .row.g-2 > .col-md-7,
+            .row.g-2 > .col-md-5, .row.g-2 > .col-md-8 { flex: 0 0 100%; max-width: 100%; }
+        }
+        @media (max-width: 480px) {
+            .topbar .d-flex { flex-wrap: wrap; }
+            .stat-card .val { font-size: .95rem !important; }
+        } }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="brand">🎵 KS <span>Production</span><small>Paramètres</small></div>
+    <nav>
+        <div class="nav-section">Menu</div>
+        <a href="/dashboard" class="nav-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        <a href="/factures" class="nav-link"><i class="bi bi-receipt"></i> Factures</a>
+        <a href="/proformas" class="nav-link"><i class="bi bi-file-earmark-text"></i> Proformas</a>
+        <a href="/agenda" class="nav-link"><i class="bi bi-calendar3"></i> Agenda</a>
+        <a href="/operations" class="nav-link"><i class="bi bi-arrow-left-right"></i> Opérations</a>
+        <a href="/clients" class="nav-link"><i class="bi bi-people"></i> Clients</a>
+        <div class="nav-section">Finance</div>
+        <a href="/paiements" class="nav-link"><i class="bi bi-clock-history"></i> Paiements</a>
+        <a href="/relances" class="nav-link"><i class="bi bi-bell-fill"></i> Relances</a>
+        <a href="/rapport" class="nav-link"><i class="bi bi-bar-chart-line"></i> Rapport</a>
+        {% if role == 'Administrateur' %}
+        <div class="nav-section">Admin</div>
+        <a href="/services" class="nav-link"><i class="bi bi-grid"></i> Services</a>
+        <a href="/utilisateurs" class="nav-link"><i class="bi bi-person-gear"></i> Utilisateurs</a>
+        <a href="/parametres" class="nav-link active"><i class="bi bi-gear"></i> Paramètres</a>
+        <a href="/sauvegarde" class="nav-link"><i class="bi bi-cloud-arrow-down"></i> Sauvegarde</a>
+        <a href="/reinitialiser" class="nav-link" style="color:#e74c3c;"><i class="bi bi-arrow-counterclockwise"></i> Réinitialiser</a>
+        {% endif %}
+    </nav>
+    <div class="sidebar-footer">
+        <a href="/profil" class="nav-link"><i class="bi bi-person-circle"></i> Mon Profil</a>
+        <a href="/logout" class="nav-link" style="color:#e74c3c;"><i class="bi bi-box-arrow-left"></i> Déconnexion</a>
+    </div>
+</div>
+
+<button class="hamburger-btn" onclick="toggleSidebar()" id="hamburgerBtn">
+    <i class="bi bi-list" id="hamburgerIcon"></i>
+</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+
+<!-- MAIN -->
+<div class="main-content">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+        <div>
+            <h5><i class="bi bi-gear me-2" style="color:var(--ks-accent);"></i>Paramètres & Configuration</h5>
+            <small class="text-muted">Personnalisez votre application</small>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-danger">Administrateur</span>
+            <!-- CLOCHE ALERTES -->
+            <div class="position-relative">
+                <button id="btnCloche" onclick="toggleAlertes()"
+                        style="background:none; border:none; cursor:pointer; position:relative; padding:4px 8px;">
+                    <i class="bi bi-bell-fill" style="font-size:1.25rem; color:#6b7280;" id="iconeCloche"></i>
+                    <span id="badgeAlertes"
+                          style="display:none; position:absolute; top:0px; right:2px;
+                                 background:#e94560; color:#fff; border-radius:50%;
+                                 width:17px; height:17px; font-size:.58rem; font-weight:700;
+                                 align-items:center; justify-content:center; line-height:1;">0</span>
+                </button>
+                <div id="panneauAlertes"
+                     style="display:none; position:absolute; right:0; top:44px; width:340px; z-index:9999;
+                            background:#fff; border-radius:14px; box-shadow:0 8px 30px rgba(0,0,0,.15);
+                            overflow:hidden; border:1px solid #f0f0f0;">
+                    <div style="background:#1a1a2e; color:#fff; padding:12px 16px; display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:.82rem; font-weight:700;"><i class="bi bi-bell-fill me-2" style="color:#e94560;"></i>Alertes prestations</span>
+                        <span id="nbAlertesHead" style="background:#e94560; color:#fff; border-radius:20px; padding:1px 8px; font-size:.7rem; font-weight:700;">0</span>
+                    </div>
+                    <div id="listeAlertes" style="max-height:360px; overflow-y:auto; padding:8px;">
+                        <div style="text-align:center; padding:20px; color:#9ca3af; font-size:.8rem;">
+                            <i class="bi bi-hourglass" style="font-size:1.5rem; display:block; margin-bottom:6px;"></i>Chargement...
+                        </div>
+                    </div>
+                    <div style="padding:10px 16px; border-top:1px solid #f0f0f0; text-align:center;">
+                        <a href="/agenda" style="font-size:.75rem; color:#6c5ce7; text-decoration:none; font-weight:600;">
+                            <i class="bi bi-calendar3 me-1"></i>Voir l'agenda complet
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FLASH -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show mb-3">
+            {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endwith %}
+
+    <!-- ONGLETS -->
+    <div class="tabs-bar">
+        <button class="tab-btn active" onclick="showTab('entreprise', this)">
+            <i class="bi bi-building"></i> Entreprise
+        </button>
+        <button class="tab-btn" onclick="showTab('logo', this)">
+            <i class="bi bi-image"></i> Logo & Couleur
+        </button>
+        <button class="tab-btn" onclick="showTab('facture', this)">
+            <i class="bi bi-receipt"></i> Facture
+        </button>
+        <button class="tab-btn" onclick="showTab('systeme', this)">
+            <i class="bi bi-sliders"></i> Système
+        </button>
+    </div>
+
+    <form method="POST" action="/parametres" enctype="multipart/form-data" id="formParams">
+
+    <!-- ═══ ONGLET 1 : ENTREPRISE ═══ -->
+    <div class="tab-content active" id="tab-entreprise">
+        <div class="row g-4">
+            <div class="col-md-7">
+                <!-- Infos principales -->
+                <div class="param-card">
+                    <div class="card-title"><i class="bi bi-building"></i> Informations principales</div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Nom de l'entreprise</label>
+                            <input type="text" class="form-control" name="nom_entreprise"
+                                   id="inp_nom" value="{{ params.nom_entreprise }}"
+                                   oninput="updatePreview()">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Slogan / Sous-titre</label>
+                            <input type="text" class="form-control" name="slogan"
+                                   id="inp_slogan" value="{{ params.slogan }}"
+                                   oninput="updatePreview()">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Adresse complète</label>
+                            <input type="text" class="form-control" name="adresse"
+                                   id="inp_adresse" value="{{ params.adresse }}"
+                                   oninput="updatePreview()">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Téléphone</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                                <input type="text" class="form-control" name="telephone"
+                                       id="inp_tel" value="{{ params.telephone }}"
+                                       oninput="updatePreview()">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                                <input type="email" class="form-control" name="email"
+                                       id="inp_email" value="{{ params.email }}"
+                                       oninput="updatePreview()">
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Site web <span class="badge-opt">optionnel</span></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-globe"></i></span>
+                                <input type="text" class="form-control" name="site_web"
+                                       value="{{ params.site_web or '' }}"
+                                       placeholder="www.ksproduction.tg">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Infos fiscales -->
+                <div class="param-card">
+                    <div class="card-title"><i class="bi bi-card-text"></i> Informations fiscales</div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">NIF <span class="badge-opt">optionnel</span></label>
+                            <input type="text" class="form-control" name="nif"
+                                   value="{{ params.nif or '' }}" placeholder="Numéro d'Identification Fiscale">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">RCCM <span class="badge-opt">optionnel</span></label>
+                            <input type="text" class="form-control" name="rccm"
+                                   value="{{ params.rccm or '' }}" placeholder="Registre du Commerce">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- APERÇU CARTE DE VISITE -->
+            <div class="col-md-5">
+                <div class="param-card">
+                    <div class="card-title"><i class="bi bi-eye"></i> Aperçu carte de visite</div>
+                    <div class="business-card">
+                        <div class="bc-header" id="bcHeader" style="background: linear-gradient(135deg, {{ params.couleur_principale }}, #6c5ce7);">
+                            <div class="bc-logo" id="bcLogo">
+                                {% if params.logo_filename %}
+                                <img src="/static/uploads/{{ params.logo_filename }}" alt="Logo" id="bcLogoImg">
+                                {% else %}
+                                <span class="bc-logo-txt" id="bcLogoTxt">🎵</span>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <div class="bc-nom" id="bcNom">{{ params.nom_entreprise }}</div>
+                                <div class="bc-slogan" id="bcSlogan">{{ params.slogan }}</div>
+                            </div>
+                        </div>
+                        <div class="bc-body">
+                            <div class="bc-info" id="bcAdresse">
+                                <i class="bi bi-geo-alt-fill" style="color:var(--ks-accent);"></i>
+                                {{ params.adresse or 'Adresse' }}
+                            </div>
+                            <div class="bc-info" id="bcTel">
+                                <i class="bi bi-telephone-fill" style="color:var(--ks-accent);"></i>
+                                {{ params.telephone or 'Téléphone' }}
+                            </div>
+                            <div class="bc-info" id="bcEmail">
+                                <i class="bi bi-envelope-fill" style="color:var(--ks-accent);"></i>
+                                {{ params.email or 'Email' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ ONGLET 2 : LOGO & COULEUR ═══ -->
+    <div class="tab-content" id="tab-logo">
+        <div class="row g-4">
+            <div class="col-md-6">
+                <!-- Logo -->
+                <div class="param-card">
+                    <div class="card-title"><i class="bi bi-image"></i> Logo de l'entreprise</div>
+
+                    {% if params.logo_filename %}
+                    <div class="logo-actuel">
+                        <img src="/static/uploads/{{ params.logo_filename }}" alt="Logo actuel">
+                        <div class="logo-info">
+                            <div class="nom">Logo actuel</div>
+                            <div class="fichier">{{ params.logo_filename }}</div>
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" type="checkbox" name="supprimer_logo" value="1" id="suppLogo">
+                                <label class="form-check-label text-danger" style="font-size:.78rem;" for="suppLogo">
+                                    Supprimer ce logo
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="font-size:.78rem; color:#888; margin-bottom:8px;">Uploader un nouveau logo :</div>
+                    {% endif %}
+
+                    <div class="logo-preview-zone" id="uploadZone">
+                        <input type="file" name="logo" accept="image/*" onchange="previewLogo(this)">
+                        <div class="upload-icon" id="uploadIcon">🖼️</div>
+                        <div class="upload-text" id="uploadText">
+                            Glisse ton logo ici ou <strong>clique pour choisir</strong>
+                        </div>
+                        <div class="upload-fmt">PNG, JPG, SVG, WEBP — Max 2 Mo</div>
+                        <img id="logoPreviewImg" src="" style="display:none; max-height:80px; border-radius:8px; margin-top:10px;">
+                    </div>
+                    <div class="form-text mt-2">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Le logo apparaîtra sur vos factures et la fiche tarifs.
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <!-- Couleur principale -->
+                <div class="param-card">
+                    <div class="card-title"><i class="bi bi-palette"></i> Couleur principale</div>
+                    <div class="color-picker-wrap mb-3">
+                        <input type="color" name="couleur_principale" id="colorPicker"
+                               value="{{ params.couleur_principale }}"
+                               oninput="updateColor(this.value)">
+                        <div>
+                            <div style="font-size:.85rem; font-weight:600;">Couleur choisie</div>
+                            <div id="colorHex" style="font-size:.78rem; color:#888;">{{ params.couleur_principale }}</div>
+                        </div>
+                    </div>
+
+                    <div style="font-size:.75rem; color:#6b7280; margin-bottom:8px;">Couleurs prédéfinies :</div>
+                    <div class="swatches">
+                        <div class="swatch {% if params.couleur_principale == '#e94560' %}selected{% endif %}" style="background:#e94560;" onclick="setColor('#e94560')" title="Rouge KS"></div>
+                        <div class="swatch {% if params.couleur_principale == '#0984e3' %}selected{% endif %}" style="background:#0984e3;" onclick="setColor('#0984e3')" title="Bleu"></div>
+                        <div class="swatch {% if params.couleur_principale == '#00b894' %}selected{% endif %}" style="background:#00b894;" onclick="setColor('#00b894')" title="Vert"></div>
+                        <div class="swatch {% if params.couleur_principale == '#6c5ce7' %}selected{% endif %}" style="background:#6c5ce7;" onclick="setColor('#6c5ce7')" title="Violet"></div>
+                        <div class="swatch {% if params.couleur_principale == '#e17055' %}selected{% endif %}" style="background:#e17055;" onclick="setColor('#e17055')" title="Orange"></div>
+                        <div class="swatch {% if params.couleur_principale == '#fd79a8' %}selected{% endif %}" style="background:#fd79a8;" onclick="setColor('#fd79a8')" title="Rose"></div>
+                        <div class="swatch {% if params.couleur_principale == '#1a1a2e' %}selected{% endif %}" style="background:#1a1a2e;" onclick="setColor('#1a1a2e')" title="Bleu foncé"></div>
+                        <div class="swatch {% if params.couleur_principale == '#2d3436' %}selected{% endif %}" style="background:#2d3436;" onclick="setColor('#2d3436')" title="Gris foncé"></div>
+                    </div>
+
+                    <!-- Aperçu couleur -->
+                    <div style="margin-top:20px;">
+                        <div style="font-size:.75rem; color:#6b7280; margin-bottom:8px;">Aperçu :</div>
+                        <div id="colorPreview" style="padding:14px 18px; border-radius:10px; color:#fff; font-weight:700; font-size:.88rem;"
+                             style="background:{{ params.couleur_principale }};">
+                            KS Production — Couleur principale
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ ONGLET 3 : FACTURE ═══ -->
+    <div class="tab-content" id="tab-facture">
+        <div class="row g-4">
+            <div class="col-md-7">
+                <div class="param-card">
+                    <div class="card-title"><i class="bi bi-file-text"></i> Textes de la facture</div>
+                    <div class="mb-3">
+                        <label class="form-label">Mentions légales (bas de facture)</label>
+                        <textarea class="form-control" name="mentions_legales" rows="3"
+                                  placeholder="Ex: Paiement à réception de facture...">{{ params.mentions_legales or '' }}</textarea>
+                        <div class="form-text">Ce texte apparaît en bas de chaque facture imprimée.</div>
+                    </div>
+                    <div>
+                        <label class="form-label">Coordonnées bancaires <span class="badge-opt">optionnel</span></label>
+                        <textarea class="form-control" name="coordonnees_bancaires" rows="3"
+                                  placeholder="Ex: Banque : UTB&#10;IBAN : TG53...&#10;BIC : UTBATGTG">{{ params.coordonnees_bancaires or '' }}</textarea>
+                        <div class="form-text">Apparaît sur la facture si renseigné.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-5">
+                <!-- TVA par défaut -->
+                <div class="param-card">
+                    <div class="card-title"><i class="bi bi-percent"></i> TVA par défaut</div>
+                    <div class="tva-options">
+                        <div class="tva-opt selected" id="tva18" onclick="selectTva(18)">
+                            <div class="tva-val">18%</div>
+                            <div class="tva-lbl">TVA standard</div>
+                        </div>
+                        <div class="tva-opt" id="tva0" onclick="selectTva(0)">
+                            <div class="tva-val">0%</div>
+                            <div class="tva-lbl">Exonéré</div>
+                        </div>
+                    </div>
+                    <input type="hidden" name="tva_defaut" id="tvaDefaut" value="18">
+                    <div class="form-text mt-3">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Ce taux sera pré-sélectionné lors de la création d'une nouvelle facture.
+                    </div>
+                </div>
+
+                <!-- Aperçu facture mini -->
+                <div class="param-card">
+                    <div class="card-title"><i class="bi bi-eye"></i> Lien rapide</div>
+                    <a href="/factures/apercu/1" target="_blank" class="btn btn-outline-primary btn-sm w-100 mb-2" style="font-size:.8rem;">
+                        <i class="bi bi-receipt me-1"></i>Voir un aperçu de facture
+                    </a>
+                    <a href="/services/fiche-tarifs" target="_blank" class="btn btn-outline-secondary btn-sm w-100" style="font-size:.8rem;">
+                        <i class="bi bi-file-earmark-text me-1"></i>Voir la fiche tarifs
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ ONGLET 4 : SYSTÈME ═══ -->
+    <div class="tab-content" id="tab-systeme">
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="param-card">
+                    <div class="card-title"><i class="bi bi-info-circle"></i> Informations système</div>
+                    <table style="width:100%; font-size:.84rem;">
+                        <tr style="border-bottom:1px solid #f3f4f6;">
+                            <td style="padding:10px 0; color:#6b7280;">Application</td>
+                            <td style="padding:10px 0; font-weight:600; color:var(--ks-primary);">KS Production Web</td>
+                        </tr>
+                        <tr style="border-bottom:1px solid #f3f4f6;">
+                            <td style="padding:10px 0; color:#6b7280;">Version</td>
+                            <td style="padding:10px 0; font-weight:600; color:var(--ks-primary);">v1.0.0</td>
+                        </tr>
+                        <tr style="border-bottom:1px solid #f3f4f6;">
+                            <td style="padding:10px 0; color:#6b7280;">Framework</td>
+                            <td style="padding:10px 0; font-weight:600; color:var(--ks-primary);">Python Flask + SQLite</td>
+                        </tr>
+                        <tr style="border-bottom:1px solid #f3f4f6;">
+                            <td style="padding:10px 0; color:#6b7280;">Compte connecté</td>
+                            <td style="padding:10px 0; font-weight:600; color:var(--ks-primary);">{{ username }} ({{ role }})</td>
+                        </tr>
+                        <tr>
+                            <td style="padding:10px 0; color:#6b7280;">Développé par</td>
+                            <td style="padding:10px 0; font-weight:600; color:var(--ks-primary);">AWUTE Maxime</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="param-card">
+                    <div class="card-title"><i class="bi bi-shield-check"></i> Sécurité & Accès</div>
+                    <div style="font-size:.84rem; color:#374151; line-height:1.8;">
+                        <div style="display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid #f3f4f6;">
+                            <i class="bi bi-check-circle-fill" style="color:#00b894;"></i>
+                            <span>Authentification par rôles active</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid #f3f4f6;">
+                            <i class="bi bi-check-circle-fill" style="color:#00b894;"></i>
+                            <span>3 niveaux d'accès : Admin, Caissier, Lecture</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px; padding:8px 0; border-bottom:1px solid #f3f4f6;">
+                            <i class="bi bi-check-circle-fill" style="color:#00b894;"></i>
+                            <span>Sessions sécurisées Flask</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px; padding:8px 0;">
+                            <i class="bi bi-check-circle-fill" style="color:#00b894;"></i>
+                            <span>Base de données locale SQLite</span>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <a href="/utilisateurs" class="btn btn-sm btn-outline-primary w-100" style="font-size:.8rem;">
+                            <i class="bi bi-person-gear me-1"></i>Gérer les utilisateurs
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- BOUTON SAUVEGARDER (visible sur tous les onglets sauf Système) -->
+    <div id="btnSave" class="d-flex gap-3 mt-2">
+        <button type="submit" class="btn btn-ks px-5">
+            <i class="bi bi-check-lg me-2"></i>Enregistrer les paramètres
+        </button>
+        <a href="/dashboard" class="btn btn-outline-secondary px-4">
+            <i class="bi bi-x-lg me-2"></i>Annuler
+        </a>
+    </div>
+
+    </form>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    // ── ONGLETS ──
+    function showTab(id, btn) {
+        document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + id).classList.add('active');
+        btn.classList.add('active');
+        // Cacher bouton save sur onglet système
+        document.getElementById('btnSave').style.display = id === 'systeme' ? 'none' : 'flex';
+    }
+
+    // ── APERÇU EN TEMPS RÉEL ──
+    function updatePreview() {
+        const nom     = document.getElementById('inp_nom').value     || 'Mon Entreprise';
+        const slogan  = document.getElementById('inp_slogan').value  || '';
+        const adresse = document.getElementById('inp_adresse').value || '';
+        const tel     = document.getElementById('inp_tel').value     || '';
+        const email   = document.getElementById('inp_email').value   || '';
+
+        document.getElementById('bcNom').textContent    = nom;
+        document.getElementById('bcSlogan').textContent = slogan;
+        document.getElementById('bcAdresse').innerHTML  = `<i class="bi bi-geo-alt-fill" style="color:var(--ks-accent);width:14px;"></i> ${adresse}`;
+        document.getElementById('bcTel').innerHTML      = `<i class="bi bi-telephone-fill" style="color:var(--ks-accent);width:14px;"></i> ${tel}`;
+        document.getElementById('bcEmail').innerHTML    = `<i class="bi bi-envelope-fill" style="color:var(--ks-accent);width:14px;"></i> ${email}`;
+    }
+
+    // ── COULEUR ──
+    function updateColor(color) {
+        document.getElementById('colorHex').textContent = color;
+        document.getElementById('colorPicker').value    = color;
+        document.getElementById('colorPreview').style.background = color;
+        document.getElementById('bcHeader').style.background = `linear-gradient(135deg, ${color}, #6c5ce7)`;
+        document.querySelectorAll('.swatch').forEach(s => s.classList.remove('selected'));
+    }
+
+    function setColor(color) {
+        updateColor(color);
+        document.querySelectorAll('.swatch').forEach(s => {
+            if (s.style.background === color || s.getAttribute('onclick').includes(color)) {
+                s.classList.add('selected');
+            }
+        });
+    }
+
+    // ── LOGO PREVIEW ──
+    function previewLogo(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                const img = document.getElementById('logoPreviewImg');
+                img.src = e.target.result;
+                img.style.display = 'block';
+                document.getElementById('uploadIcon').style.display = 'none';
+                document.getElementById('uploadText').textContent = input.files[0].name;
+
+                // Aperçu dans la carte de visite
+                const bcLogo = document.getElementById('bcLogo');
+                bcLogo.innerHTML = `<img src="${e.target.result}" style="width:100%;height:100%;object-fit:contain;border-radius:8px;">`;
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    // ── TVA ──
+    function selectTva(val) {
+        document.getElementById('tva18').classList.toggle('selected', val === 18);
+        document.getElementById('tva0').classList.toggle('selected', val === 0);
+        document.getElementById('tvaDefaut').value = val;
+    }
+
+    // Init couleur
+    updateColor('{{ params.couleur_principale }}');
+</script>
+<script>
+let alertesOuvert = false;
+function toggleAlertes() {
+    const panneau = document.getElementById('panneauAlertes');
+    alertesOuvert = !alertesOuvert;
+    panneau.style.display = alertesOuvert ? 'block' : 'none';
+    if (alertesOuvert) chargerAlertes();
+}
+document.addEventListener('click', function(e) {
+    const btn = document.getElementById('btnCloche');
+    const panneau = document.getElementById('panneauAlertes');
+    if (btn && panneau && !btn.contains(e.target) && !panneau.contains(e.target)) {
+        panneau.style.display = 'none'; alertesOuvert = false;
+    }
+});
+function chargerAlertes() {
+    fetch('/api/alertes').then(r => r.json()).then(data => {
+        const liste = document.getElementById('listeAlertes');
+        const badge = document.getElementById('badgeAlertes');
+        const nbHead = document.getElementById('nbAlertesHead');
+        const icone = document.getElementById('iconeCloche');
+        const nb = data.length;
+        nbHead.textContent = nb;
+        if (nb > 0) { badge.textContent = nb > 9 ? '9+' : nb; badge.style.display = 'flex'; icone.style.color = '#e94560'; }
+        else { badge.style.display = 'none'; icone.style.color = '#6b7280'; }
+        if (data.length === 0) {
+            liste.innerHTML = `<div style="text-align:center;padding:24px;color:#9ca3af;"><i class="bi bi-check-circle" style="font-size:2rem;color:#10b981;display:block;margin-bottom:8px;"></i><div style="font-size:.82rem;">Aucune prestation imminente</div></div>`;
+            return;
+        }
+        liste.innerHTML = data.map(a => `
+            <div style="padding:10px 12px;border-radius:10px;margin-bottom:6px;display:flex;gap:10px;border-left:4px solid ${a.niveau=='danger'?'#e94560':a.niveau=='warning'?'#f59e0b':'#6c5ce7'};background:${a.niveau=='danger'?'#fff5f7':a.niveau=='warning'?'#fffbeb':'#f5f3ff'};cursor:pointer;" onclick="window.location='/agenda'">
+                <div style="flex:1;min-width:0;">
+                    <div style="display:flex;justify-content:space-between;gap:4px;">
+                        <div style="font-size:.8rem;font-weight:700;color:#1a1a2e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a.titre}</div>
+                        <span style="font-size:.68rem;font-weight:700;padding:1px 7px;border-radius:10px;background:${a.niveau=='danger'?'#fee2e2':a.niveau=='warning'?'#fef3c7':'#ede9fe'};color:${a.niveau=='danger'?'#991b1b':a.niveau=='warning'?'#92400e':'#5b21b6'};flex-shrink:0;">${a.label}</span>
+                    </div>
+                    <div style="font-size:.7rem;color:#6b7280;margin-top:2px;">
+                        <i class="bi bi-calendar3 me-1"></i>${a.date}
+                        ${a.heure ? `<i class="bi bi-clock ms-2 me-1"></i>${a.heure}` : ''}
+                        ${a.client ? `<i class="bi bi-person ms-2 me-1"></i>${a.client}` : ''}
+                    </div>
+                </div>
+            </div>`).join('');
+    }).catch(() => {});
+}
+function initBadgeAlertes() {
+    fetch('/api/alertes').then(r => r.json()).then(data => {
+        const badge = document.getElementById('badgeAlertes');
+        const icone = document.getElementById('iconeCloche');
+        if (data.length > 0) { badge.textContent = data.length > 9 ? '9+' : data.length; badge.style.display = 'flex'; icone.style.color = '#e94560'; }
+    }).catch(() => {});
+}
+document.addEventListener('DOMContentLoaded', initBadgeAlertes);
+</script>
+    <!-- Service Worker PWA -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(reg => console.log('SW enregistré:', reg.scope))
+            .catch(err => console.log('SW erreur:', err));
+        });
+      }
+    </script>
+</body>
+</html>

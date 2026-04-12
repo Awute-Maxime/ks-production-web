@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PWA -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#e94560">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="KS Production">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/icons/favicon-16x16.png">
+    <title>Réinitialisation — KS Production</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root { --ks-primary: #1a1a2e; --ks-accent: #e94560; }
+        body  { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
+
+        .sidebar {
+            width: 200px; min-height: 100vh; background: var(--ks-primary);
+            position: fixed; left: 0; top: 0; z-index: 100; display: flex; flex-direction: column;
+        }
+        .brand { color: #fff; font-size: .95rem; font-weight: 700; padding: 14px 16px 12px; border-bottom: 1px solid rgba(255,255,255,.1); }
+        .brand span { color: var(--ks-accent); }
+        .brand small { display: block; font-size: .58rem; color: rgba(255,255,255,.3); font-weight: 400; }
+        .sidebar nav { flex: 1; padding: 8px 0; }
+        .nav-section { font-size: .58rem; text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,.28); padding: 10px 16px 3px; font-weight: 600; }
+        .nav-link { color: #aab4c4; padding: 8px 16px; display: flex; align-items: center; gap: 8px; font-size: .8rem; transition: all .2s; }
+        .nav-link:hover, .nav-link.active { color: #fff; background: var(--ks-accent); border-radius: 8px; margin: 0 6px; padding: 8px 10px; }
+        .nav-link i { font-size: .88rem; width: 16px; }
+        .sidebar-footer { padding: 8px 6px 14px; border-top: 1px solid rgba(255,255,255,.1); }
+
+        .main-content { margin-left: 200px; padding: 30px; max-width: 860px; }
+
+        .topbar {
+            background: #fff; border-radius: 12px; padding: 12px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 24px; box-shadow: 0 1px 6px rgba(0,0,0,.06);
+        }
+        .topbar h5 { margin: 0; font-weight: 700; color: var(--ks-primary); font-size: .95rem; }
+
+        /* ALERTE DANGER */
+        .danger-banner {
+            background: linear-gradient(135deg, #d63031, #e17055);
+            border-radius: 14px; padding: 20px 24px; color: #fff; margin-bottom: 24px;
+            display: flex; align-items: center; gap: 16px;
+        }
+        .danger-banner .icon { font-size: 2.5rem; flex-shrink: 0; }
+        .danger-banner .title { font-size: 1rem; font-weight: 800; margin-bottom: 4px; }
+        .danger-banner .desc  { font-size: .82rem; opacity: .85; }
+
+        /* STATS ACTUELLES */
+        .stats-card {
+            background: #fff; border-radius: 14px; padding: 20px 24px;
+            box-shadow: 0 1px 6px rgba(0,0,0,.06); margin-bottom: 20px;
+        }
+        .card-title { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #6b7280; margin-bottom: 16px; }
+        .stat-items { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .stat-item {
+            background: #f8f9fa; border-radius: 10px; padding: 14px;
+            text-align: center; border: 1.5px solid #e5e7eb;
+        }
+        .stat-item .ico  { font-size: 1.4rem; margin-bottom: 6px; }
+        .stat-item .num  { font-size: 1.4rem; font-weight: 800; color: var(--ks-primary); }
+        .stat-item .lbl  { font-size: .68rem; color: #6b7280; text-transform: uppercase; letter-spacing: .05em; margin-top: 2px; }
+
+        /* OPTIONS */
+        .options-card {
+            background: #fff; border-radius: 14px; padding: 20px 24px;
+            box-shadow: 0 1px 6px rgba(0,0,0,.06); margin-bottom: 20px;
+        }
+        .option-item {
+            display: flex; align-items: center; gap: 14px;
+            padding: 14px 16px; border-radius: 10px; border: 1.5px solid #e5e7eb;
+            margin-bottom: 10px; cursor: pointer; transition: all .15s;
+        }
+        .option-item:hover { border-color: #d63031; background: #fff5f5; }
+        .option-item.checked { border-color: #d63031; background: #fdecea; }
+        .option-item .opt-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
+        .option-item .opt-nom  { font-size: .9rem; font-weight: 700; color: var(--ks-primary); }
+        .option-item .opt-desc { font-size: .75rem; color: #6b7280; margin-top: 2px; }
+        .option-item .opt-count { font-size: .78rem; font-weight: 700; color: #d63031; margin-left: auto; }
+        .option-item input[type=checkbox] { width: 18px; height: 18px; accent-color: #d63031; flex-shrink: 0; }
+
+        /* Ce qui est conservé */
+        .keep-card {
+            background: #e8f5e9; border: 1.5px solid #00b894; border-radius: 14px;
+            padding: 16px 20px; margin-bottom: 20px;
+        }
+        .keep-title { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #00b894; margin-bottom: 12px; }
+        .keep-item { display: flex; align-items: center; gap: 8px; font-size: .84rem; color: #065f46; padding: 4px 0; }
+        .keep-item i { color: #00b894; }
+
+        /* CONFIRMATION */
+        .confirm-card {
+            background: #fff; border-radius: 14px; padding: 20px 24px;
+            box-shadow: 0 1px 6px rgba(0,0,0,.06); margin-bottom: 20px;
+            border-top: 4px solid #d63031;
+        }
+        .confirm-label { font-size: .82rem; font-weight: 600; color: #374151; margin-bottom: 8px; }
+        .confirm-input {
+            border: 2px solid #e0e0e0; border-radius: 8px; padding: 10px 14px;
+            font-size: .9rem; font-family: monospace; width: 100%;
+            letter-spacing: .1em; transition: border-color .2s;
+        }
+        .confirm-input:focus { outline: none; border-color: #d63031; }
+        .confirm-input.valid { border-color: #00b894; background: #f0fdf4; }
+
+        .btn-danger-custom {
+            background: linear-gradient(135deg, #d63031, #e17055);
+            border: none; color: #fff; padding: 12px 30px;
+            border-radius: 10px; font-weight: 700; font-size: .9rem;
+            cursor: pointer; transition: all .2s; opacity: .5;
+        }
+        .btn-danger-custom.ready { opacity: 1; }
+        .btn-danger-custom.ready:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(214,48,49,.3); }
+
+        
+        /* ── RESPONSIVE MOBILE ── */
+        .hamburger-btn {
+            display: none; position: fixed; top: 12px; left: 12px; z-index: 200;
+            background: var(--ks-accent, #e94560); color: #fff; border: none;
+            border-radius: 10px; width: 40px; height: 40px; font-size: 1.1rem;
+            cursor: pointer; align-items: center; justify-content: center;
+            box-shadow: 0 3px 12px rgba(233,69,96,.4); transition: all .2s;
+        }
+        .hamburger-btn:hover { background: #c0392b; }
+        .sidebar-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,.5); z-index: 150; backdrop-filter: blur(2px);
+        }
+        .sidebar-overlay.active { display: block; }
+        @media (max-width: 768px) {
+            .hamburger-btn { display: flex; }
+            .sidebar { transform: translateX(-100%); transition: transform .3s ease; z-index: 160; width: 240px !important; }
+            .sidebar.open { transform: translateX(0); }
+            .main-content, .main { margin-left: 0 !important; padding: 12px !important; padding-top: 60px !important; }
+            .topbar { flex-wrap: wrap; gap: 8px; padding: 10px 12px 10px 60px !important; }
+            .topbar h5 { font-size: .85rem !important; }
+            .table-responsive { overflow-x: auto; }
+            .fac-table, .rel-table, .ops-table, .pai-table { min-width: 700px; }
+            .stats-row { flex-direction: column; }
+            .stat-mini { min-width: unset !important; }
+            .client-grid { grid-template-columns: 1fr !important; }
+            .filter-bar { flex-wrap: wrap; gap: 8px !important; }
+            .filter-bar .form-select, .filter-bar .form-control { width: 100% !important; }
+            .modal-dialog { margin: 8px !important; max-width: calc(100vw - 16px) !important; }
+            .modal-body { max-height: 70vh; overflow-y: auto; }
+            .row.g-3 > [class*="col-md-"], .row.g-2 > [class*="col-md-"] { flex: 0 0 100%; max-width: 100%; }
+        }
+        @media (max-width: 480px) {
+            .topbar .d-flex { flex-wrap: wrap; }
+            .stat-card .val { font-size: .95rem !important; }
+        } }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="brand">🎵 KS <span>Production</span><small>Réinitialisation</small></div>
+    <nav>
+        <div class="nav-section">Menu</div>
+        <a href="/dashboard" class="nav-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        <a href="/factures" class="nav-link"><i class="bi bi-receipt"></i> Factures</a>
+        <a href="/proformas" class="nav-link"><i class="bi bi-file-earmark-text"></i> Proformas</a>
+        <a href="/agenda" class="nav-link"><i class="bi bi-calendar3"></i> Agenda</a>
+        <a href="/operations" class="nav-link"><i class="bi bi-arrow-left-right"></i> Opérations</a>
+        <a href="/clients" class="nav-link"><i class="bi bi-people"></i> Clients</a>
+        <div class="nav-section">Finance</div>
+        <a href="/paiements" class="nav-link"><i class="bi bi-clock-history"></i> Paiements</a>
+        <a href="/relances" class="nav-link"><i class="bi bi-bell-fill"></i> Relances</a>
+        <a href="/rapport" class="nav-link"><i class="bi bi-bar-chart-line"></i> Rapport</a>
+        {% if role == 'Administrateur' %}
+        <div class="nav-section">Admin</div>
+        <a href="/services" class="nav-link"><i class="bi bi-grid"></i> Services</a>
+        <a href="/utilisateurs" class="nav-link"><i class="bi bi-person-gear"></i> Utilisateurs</a>
+        <a href="/techniciens" class="nav-link"><i class="bi bi-people-fill"></i> Techniciens</a>
+        <a href="/parametres" class="nav-link"><i class="bi bi-gear"></i> Paramètres</a>
+        <a href="/sauvegarde" class="nav-link"><i class="bi bi-cloud-arrow-down"></i> Sauvegarde</a>
+        <a href="/reinitialiser" class="nav-link active" style="color:#e74c3c;"><i class="bi bi-arrow-counterclockwise"></i> Réinitialiser</a>
+        {% endif %}
+    </nav>
+    <div class="sidebar-footer">
+        <a href="/profil" class="nav-link"><i class="bi bi-person-circle"></i> Mon Profil</a>
+        <a href="/logout" class="nav-link" style="color:#e74c3c;"><i class="bi bi-box-arrow-left"></i> Déconnexion</a>
+    </div>
+</div>
+
+<button class="hamburger-btn" onclick="toggleSidebar()" id="hamburgerBtn">
+    <i class="bi bi-list" id="hamburgerIcon"></i>
+</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+
+<!-- MAIN -->
+<div class="main-content">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+        <div>
+            <h5><i class="bi bi-arrow-counterclockwise me-2" style="color:#d63031;"></i>Réinitialisation des données</h5>
+            <small class="text-muted">Préparer l'application pour une utilisation réelle</small>
+        </div>
+        <a href="/dashboard" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Annuler
+        </a>
+    </div>
+
+    <!-- FLASH -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show mb-3">
+            {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endwith %}
+
+    <!-- ALERTE DANGER -->
+    <div class="danger-banner">
+        <div class="icon">⚠️</div>
+        <div>
+            <div class="title">Action irréversible — Données de test</div>
+            <div class="desc">
+                Cette opération supprime définitivement les données sélectionnées.
+                Vos paramètres, utilisateurs et services seront conservés.
+                <strong>Cette action ne peut pas être annulée.</strong>
+            </div>
+        </div>
+    </div>
+
+    <!-- STATS ACTUELLES -->
+    <div class="stats-card">
+        <div class="card-title">📊 Données actuellement en base</div>
+        <div class="stat-items">
+            <div class="stat-item">
+                <div class="ico">🧾</div>
+                <div class="num">{{ nb_factures }}</div>
+                <div class="lbl">Factures</div>
+            </div>
+            <div class="stat-item">
+                <div class="ico">💰</div>
+                <div class="num">{{ nb_paiements }}</div>
+                <div class="lbl">Paiements</div>
+            </div>
+            <div class="stat-item">
+                <div class="ico">🔄</div>
+                <div class="num">{{ nb_operations }}</div>
+                <div class="lbl">Opérations</div>
+            </div>
+            <div class="stat-item">
+                <div class="ico">👥</div>
+                <div class="num">{{ nb_clients }}</div>
+                <div class="lbl">Clients</div>
+            </div>
+            <div class="stat-item">
+                <div class="ico">🎵</div>
+                <div class="num">{{ nb_services }}</div>
+                <div class="lbl">Services</div>
+            </div>
+        </div>
+    </div>
+
+    <form method="POST" action="/reinitialiser" id="formReinit">
+
+        <!-- OPTIONS À SUPPRIMER -->
+        <div class="options-card">
+            <div class="card-title">🗑️ Choisir ce qu'on supprime</div>
+
+            <div class="option-item" id="opt-factures" onclick="toggleOption('factures')">
+                <input type="checkbox" name="options" value="factures" id="chk-factures">
+                <div class="opt-icon" style="background:#fdecea;">🧾</div>
+                <div>
+                    <div class="opt-nom">Factures & Paiements</div>
+                    <div class="opt-desc">Supprime toutes les factures, lignes de facture et paiements enregistrés</div>
+                </div>
+                <div class="opt-count">{{ nb_factures }} facture(s) · {{ nb_paiements }} paiement(s)</div>
+            </div>
+
+            <div class="option-item" id="opt-operations" onclick="toggleOption('operations')">
+                <input type="checkbox" name="options" value="operations" id="chk-operations">
+                <div class="opt-icon" style="background:#fef3c7;">🔄</div>
+                <div>
+                    <div class="opt-nom">Opérations</div>
+                    <div class="opt-desc">Supprime toutes les recettes et dépenses enregistrées</div>
+                </div>
+                <div class="opt-count">{{ nb_operations }} opération(s)</div>
+            </div>
+
+            <div class="option-item" id="opt-clients" onclick="toggleOption('clients')">
+                <input type="checkbox" name="options" value="clients" id="chk-clients">
+                <div class="opt-icon" style="background:#e0f2fe;">👥</div>
+                <div>
+                    <div class="opt-nom">Clients</div>
+                    <div class="opt-desc">Supprime tous les clients enregistrés</div>
+                </div>
+                <div class="opt-count">{{ nb_clients }} client(s)</div>
+            </div>
+
+            <div class="option-item" id="opt-services" onclick="toggleOption('services')">
+                <input type="checkbox" name="options" value="services" id="chk-services">
+                <div class="opt-icon" style="background:#d1fae5;">🎵</div>
+                <div>
+                    <div class="opt-nom">Services</div>
+                    <div class="opt-desc">Supprime la liste des services et tarifs (vous devrez les recréer)</div>
+                </div>
+                <div class="opt-count">{{ nb_services }} service(s)</div>
+            </div>
+
+            <!-- Bouton tout sélectionner -->
+            <button type="button" class="btn btn-outline-danger btn-sm mt-2" onclick="toutSelectionner()">
+                <i class="bi bi-check-all me-1"></i>Tout sélectionner
+            </button>
+            <button type="button" class="btn btn-outline-secondary btn-sm mt-2 ms-2" onclick="toutDeselectionner()">
+                <i class="bi bi-x-lg me-1"></i>Tout désélectionner
+            </button>
+        </div>
+
+        <!-- CE QUI EST CONSERVÉ -->
+        <div class="keep-card">
+            <div class="keep-title">✅ Ce qui sera conservé dans tous les cas</div>
+            <div class="keep-item"><i class="bi bi-check-circle-fill"></i> Paramètres de l'entreprise (nom, logo, couleur, contacts)</div>
+            <div class="keep-item"><i class="bi bi-check-circle-fill"></i> Comptes utilisateurs et mots de passe</div>
+            <div class="keep-item"><i class="bi bi-check-circle-fill"></i> Services et tarifs (sauf si vous cochez "Services" ci-dessus)</div>
+        </div>
+
+        <!-- CONFIRMATION -->
+        <div class="confirm-card">
+            <div class="confirm-label">
+                🔐 Pour confirmer, tapez exactement : <code style="background:#fdecea; padding:2px 8px; border-radius:4px; color:#d63031; font-weight:700;">REINITIALISER</code>
+            </div>
+            <input type="text" class="confirm-input" name="confirmation" id="inputConfirm"
+                   placeholder="Tapez REINITIALISER pour confirmer..."
+                   oninput="verifierConfirmation()" autocomplete="off">
+            <div style="font-size:.72rem; color:#9ca3af; margin-top:6px;">
+                <i class="bi bi-info-circle me-1"></i>Respectez les majuscules et les accents
+            </div>
+        </div>
+
+        <!-- BOUTON FINAL -->
+        <div class="d-flex gap-3 align-items-center">
+            <button type="submit" class="btn-danger-custom" id="btnReinit" disabled
+                    onclick="return confirmerAction()">
+                <i class="bi bi-arrow-counterclockwise me-2"></i>Lancer la réinitialisation
+            </button>
+            <a href="/dashboard" class="btn btn-outline-secondary px-4">
+                <i class="bi bi-x-lg me-2"></i>Annuler
+            </a>
+        </div>
+
+    </form>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function toggleOption(id) {
+        const chk  = document.getElementById('chk-' + id);
+        const item = document.getElementById('opt-' + id);
+        chk.checked = !chk.checked;
+        item.classList.toggle('checked', chk.checked);
+        verifierConfirmation();
+    }
+
+    function toutSelectionner() {
+        ['factures','operations','clients','services'].forEach(id => {
+            document.getElementById('chk-' + id).checked = true;
+            document.getElementById('opt-' + id).classList.add('checked');
+        });
+        verifierConfirmation();
+    }
+
+    function toutDeselectionner() {
+        ['factures','operations','clients','services'].forEach(id => {
+            document.getElementById('chk-' + id).checked = false;
+            document.getElementById('opt-' + id).classList.remove('checked');
+        });
+        verifierConfirmation();
+    }
+
+    function verifierConfirmation() {
+        const texte   = document.getElementById('inputConfirm').value;
+        const valide  = texte === 'REINITIALISER';
+        const options = document.querySelectorAll('input[name=options]:checked').length > 0;
+        const btn     = document.getElementById('btnReinit');
+        const input   = document.getElementById('inputConfirm');
+
+        input.classList.toggle('valid', valide);
+        btn.disabled = !(valide && options);
+        btn.classList.toggle('ready', valide && options);
+    }
+
+    function confirmerAction() {
+        const options = [];
+        document.querySelectorAll('input[name=options]:checked').forEach(c => options.push(c.value));
+        return confirm(`⚠️ ATTENTION !\n\nVous allez supprimer définitivement :\n${options.join(', ')}\n\nCette action est IRRÉVERSIBLE.\n\nÊtes-vous absolument certain ?`);
+    }
+</script>
+    <!-- Service Worker PWA -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(reg => console.log('SW enregistré:', reg.scope))
+            .catch(err => console.log('SW erreur:', err));
+        });
+      }
+    </script>
+</body>
+</html>

@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PWA -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#e94560">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="KS Production">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/icons/favicon-16x16.png">
+    <title>Services — KS Production</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root { --ks-primary: #1a1a2e; --ks-accent: #e94560; }
+        body  { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
+
+        .sidebar {
+            width: 200px; min-height: 100vh; background: var(--ks-primary);
+            position: fixed; left: 0; top: 0; z-index: 100;
+            display: flex; flex-direction: column;
+        }
+        .brand { color: #fff; font-size: .95rem; font-weight: 700; padding: 14px 16px 12px; border-bottom: 1px solid rgba(255,255,255,.1); }
+        .brand span { color: var(--ks-accent); }
+        .brand small { display: block; font-size: .58rem; color: rgba(255,255,255,.3); font-weight: 400; }
+        .sidebar nav { flex: 1; padding: 8px 0; }
+        .nav-section { font-size: .58rem; text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,.28); padding: 10px 16px 3px; font-weight: 600; }
+        .nav-link { color: #aab4c4; padding: 8px 16px; display: flex; align-items: center; gap: 8px; font-size: .8rem; transition: all .2s; }
+        .nav-link:hover, .nav-link.active { color: #fff; background: var(--ks-accent); border-radius: 8px; margin: 0 6px; padding: 8px 10px; }
+        .nav-link i { font-size: .88rem; width: 16px; }
+        .sidebar-footer { padding: 8px 6px 14px; border-top: 1px solid rgba(255,255,255,.1); }
+
+        .main-content { margin-left: 200px; padding: 20px; }
+
+        .topbar {
+            background: #fff; border-radius: 12px; padding: 12px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; box-shadow: 0 1px 6px rgba(0,0,0,.06);
+        }
+        .topbar h5 { margin: 0; font-weight: 700; color: var(--ks-primary); font-size: .95rem; }
+
+        /* SECTION CARDS */
+        .section-card {
+            background: #fff; border-radius: 14px;
+            box-shadow: 0 1px 6px rgba(0,0,0,.06); overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .section-header {
+            padding: 14px 20px; display: flex;
+            justify-content: space-between; align-items: center;
+        }
+        .section-header.studio { background: linear-gradient(135deg, #0984e3, #6c5ce7); color: #fff; }
+        .section-header.sono   { background: linear-gradient(135deg, #e17055, #e94560); color: #fff; }
+        .section-header.autres { background: linear-gradient(135deg, #00b894, #00cec9); color: #fff; }
+        .section-header .s-title { font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; }
+        .section-header .s-count { font-size: .72rem; opacity: .75; }
+
+        /* TABLE */
+        .svc-table { width: 100%; border-collapse: collapse; }
+        .svc-table thead th {
+            background: #f8f9fa; color: #6b7280; font-size: .68rem;
+            text-transform: uppercase; letter-spacing: .06em;
+            padding: 9px 16px; font-weight: 600; border: none;
+        }
+        .svc-table tbody tr { border-bottom: 1px solid #f3f4f6; transition: background .15s; }
+        .svc-table tbody tr:last-child { border-bottom: none; }
+        .svc-table tbody tr:hover { background: #f8f9fe; }
+        .svc-table tbody td { padding: 11px 16px; font-size: .85rem; color: #374151; vertical-align: middle; }
+        .prix-badge {
+            background: #e8f5e9; color: #00b894; border-radius: 20px;
+            padding: 3px 12px; font-size: .78rem; font-weight: 700;
+        }
+        .section-pill {
+            border-radius: 20px; padding: 3px 10px; font-size: .72rem; font-weight: 600;
+        }
+        .pill-studio { background: #e0f2fe; color: #0369a1; }
+        .pill-sono   { background: #fef3c7; color: #92400e; }
+        .pill-autres { background: #d1fae5; color: #065f46; }
+
+        /* FORMULAIRE AJOUT */
+        .add-card {
+            background: #fff; border-radius: 14px;
+            padding: 20px 24px; box-shadow: 0 1px 6px rgba(0,0,0,.06);
+            margin-bottom: 20px; border-left: 4px solid var(--ks-accent);
+        }
+        .add-title { font-size: .78rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--ks-accent); margin-bottom: 14px; }
+        .form-label { font-weight: 600; color: #444; font-size: .85rem; }
+        .form-control, .form-select { border-radius: 8px; border: 1.5px solid #e0e0e0; padding: 8px 12px; font-size: .85rem; }
+        .form-control:focus, .form-select:focus { border-color: var(--ks-accent); box-shadow: 0 0 0 3px #e9456022; }
+
+        .btn-ks  { background: var(--ks-accent); border: none; color: #fff; }
+        .btn-ks:hover { background: #c0392b; color: #fff; }
+
+        /* MODAL MODIFIER */
+        .modal-header { background: var(--ks-primary); color: #fff; }
+        .modal-title  { font-size: .9rem; font-weight: 700; }
+        .btn-close-white { filter: invert(1); }
+
+        /* VIDE */
+        .empty-row td { text-align: center; padding: 24px; color: #aaa; font-size: .82rem; }
+
+        
+        /* ── RESPONSIVE MOBILE ── */
+        .hamburger-btn {
+            display: none; position: fixed; top: 12px; left: 12px; z-index: 200;
+            background: var(--ks-accent, #e94560); color: #fff; border: none;
+            border-radius: 10px; width: 40px; height: 40px; font-size: 1.1rem;
+            cursor: pointer; align-items: center; justify-content: center;
+            box-shadow: 0 3px 12px rgba(233,69,96,.4); transition: all .2s;
+        }
+        .hamburger-btn:hover { background: #c0392b; }
+        .sidebar-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,.5); z-index: 150; backdrop-filter: blur(2px);
+        }
+        .sidebar-overlay.active { display: block; }
+        @media (max-width: 768px) {
+            .hamburger-btn { display: flex; }
+            .sidebar { transform: translateX(-100%); transition: transform .3s ease; z-index: 160; width: 240px !important; }
+            .sidebar.open { transform: translateX(0); }
+            .main-content, .main { margin-left: 0 !important; padding: 12px !important; padding-top: 60px !important; }
+            .topbar { flex-wrap: wrap; gap: 8px; padding: 10px 12px 10px 60px !important; }
+            .topbar h5 { font-size: .85rem !important; }
+            .table-responsive { overflow-x: auto; }
+            .fac-table, .rel-table, .ops-table, .pai-table { min-width: 700px; }
+            .stats-row { flex-direction: column; }
+            .stat-mini { min-width: unset !important; }
+            .client-grid { grid-template-columns: 1fr !important; }
+            .filter-bar { flex-wrap: wrap; gap: 8px !important; }
+            .filter-bar .form-select, .filter-bar .form-control { width: 100% !important; }
+            .modal-dialog { margin: 8px !important; max-width: calc(100vw - 16px) !important; }
+            .modal-body { max-height: 70vh; overflow-y: auto; }
+            .row.g-3 > [class*="col-md-"], .row.g-2 > [class*="col-md-"] { flex: 0 0 100%; max-width: 100%; }
+        }
+        @media (max-width: 480px) {
+            .topbar .d-flex { flex-wrap: wrap; }
+            .stat-card .val { font-size: .95rem !important; }
+        } }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="brand">🎵 KS <span>Production</span><small>Gestion services</small></div>
+    <nav>
+        <div class="nav-section">Menu</div>
+        <a href="/dashboard" class="nav-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        <a href="/factures" class="nav-link"><i class="bi bi-receipt"></i> Factures</a>
+        <a href="/proformas" class="nav-link"><i class="bi bi-file-earmark-text"></i> Proformas</a>
+        <a href="/agenda" class="nav-link"><i class="bi bi-calendar3"></i> Agenda</a>
+        <a href="/operations" class="nav-link"><i class="bi bi-arrow-left-right"></i> Opérations</a>
+        <a href="/clients" class="nav-link"><i class="bi bi-people"></i> Clients</a>
+        <div class="nav-section">Finance</div>
+        <a href="/paiements" class="nav-link"><i class="bi bi-clock-history"></i> Paiements</a>
+        <a href="/relances" class="nav-link"><i class="bi bi-bell-fill"></i> Relances</a>
+        <a href="/rapport" class="nav-link"><i class="bi bi-bar-chart-line"></i> Rapport</a>
+        {% if role == 'Administrateur' %}
+        <div class="nav-section">Admin</div>
+        <a href="/services" class="nav-link active"><i class="bi bi-grid"></i> Services</a>
+        <a href="/utilisateurs" class="nav-link"><i class="bi bi-person-gear"></i> Utilisateurs</a>
+        <a href="/techniciens" class="nav-link"><i class="bi bi-people-fill"></i> Techniciens</a>
+        <a href="/parametres" class="nav-link"><i class="bi bi-gear"></i> Paramètres</a>
+        <a href="/sauvegarde" class="nav-link"><i class="bi bi-cloud-arrow-down"></i> Sauvegarde</a>
+        <a href="/reinitialiser" class="nav-link" style="color:#e74c3c;"><i class="bi bi-arrow-counterclockwise"></i> Réinitialiser</a>
+        {% endif %}
+    </nav>
+    <div class="sidebar-footer">
+        <a href="/profil" class="nav-link"><i class="bi bi-person-circle"></i> Mon Profil</a>
+        <a href="/logout" class="nav-link" style="color:#e74c3c;"><i class="bi bi-box-arrow-left"></i> Déconnexion</a>
+    </div>
+</div>
+
+<button class="hamburger-btn" onclick="toggleSidebar()" id="hamburgerBtn">
+    <i class="bi bi-list" id="hamburgerIcon"></i>
+</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+
+<!-- MAIN -->
+<div class="main-content">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+        <div>
+            <h5><i class="bi bi-grid me-2" style="color:var(--ks-accent);"></i>Gestion des Services</h5>
+            <small class="text-muted">{{ total }} service(s) actif(s)</small>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a href="/services/fiche-tarifs" class="btn btn-sm" style="background:var(--ks-accent);color:#fff;border:none;" target="_blank">
+                <i class="bi bi-file-earmark-text me-1"></i>Voir la Fiche Tarifs
+            </a>
+            <span class="badge bg-secondary">{{ role }}</span>
+        </div>
+            <!-- CLOCHE ALERTES -->
+            <div class="position-relative">
+                <button id="btnCloche" onclick="toggleAlertes()"
+                        style="background:none; border:none; cursor:pointer; position:relative; padding:4px 8px;">
+                    <i class="bi bi-bell-fill" style="font-size:1.25rem; color:#6b7280;" id="iconeCloche"></i>
+                    <span id="badgeAlertes"
+                          style="display:none; position:absolute; top:0px; right:2px;
+                                 background:#e94560; color:#fff; border-radius:50%;
+                                 width:17px; height:17px; font-size:.58rem; font-weight:700;
+                                 align-items:center; justify-content:center; line-height:1;">0</span>
+                </button>
+                <div id="panneauAlertes"
+                     style="display:none; position:absolute; right:0; top:44px; width:340px; z-index:9999;
+                            background:#fff; border-radius:14px; box-shadow:0 8px 30px rgba(0,0,0,.15);
+                            overflow:hidden; border:1px solid #f0f0f0;">
+                    <div style="background:#1a1a2e; color:#fff; padding:12px 16px; display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:.82rem; font-weight:700;"><i class="bi bi-bell-fill me-2" style="color:#e94560;"></i>Alertes prestations</span>
+                        <span id="nbAlertesHead" style="background:#e94560; color:#fff; border-radius:20px; padding:1px 8px; font-size:.7rem; font-weight:700;">0</span>
+                    </div>
+                    <div id="listeAlertes" style="max-height:360px; overflow-y:auto; padding:8px;">
+                        <div style="text-align:center; padding:20px; color:#9ca3af; font-size:.8rem;">
+                            <i class="bi bi-hourglass" style="font-size:1.5rem; display:block; margin-bottom:6px;"></i>Chargement...
+                        </div>
+                    </div>
+                    <div style="padding:10px 16px; border-top:1px solid #f0f0f0; text-align:center;">
+                        <a href="/agenda" style="font-size:.75rem; color:#6c5ce7; text-decoration:none; font-weight:600;">
+                            <i class="bi bi-calendar3 me-1"></i>Voir l'agenda complet
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FLASH -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show mb-3">
+            {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endwith %}
+
+    <!-- FORMULAIRE AJOUT -->
+    {% if role == 'Administrateur' %}
+    <div class="add-card">
+        <div class="add-title"><i class="bi bi-plus-circle me-2"></i>Ajouter un nouveau service</div>
+        <form method="POST" action="/services/nouveau">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">Section <span class="text-danger">*</span></label>
+                    <select class="form-select" name="section" required>
+                        <option value="">-- Choisir --</option>
+                        <option value="Studio">Studio</option>
+                        <option value="Sonorisation">Sonorisation</option>
+                        <option value="Général">Général</option>
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <label class="form-label">Libellé du service <span class="text-danger">*</span></label>
+                    <input type="text" class="form-control" name="libelle"
+                           placeholder="Ex: Enregistrement Studio" required>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Prix (FCFA)</label>
+                    <input type="number" class="form-control" name="prix"
+                           placeholder="0" min="0" step="500">
+                </div>
+                <div class="col-md-1">
+                    <button type="submit" class="btn btn-ks w-100">
+                        <i class="bi bi-plus-lg"></i>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+
+    <!-- SECTION STUDIO -->
+    <div class="section-card">
+        <div class="section-header studio">
+            <div>
+                <div class="s-title"><i class="bi bi-mic me-2"></i>Studio</div>
+                <div class="s-count">{{ services_studio|length }} service(s)</div>
+            </div>
+        </div>
+        <table class="svc-table">
+            <thead>
+                <tr>
+                    <th>Libellé du service</th>
+                    <th>Section</th>
+                    <th>Prix unitaire</th>
+                    {% if role == 'Administrateur' %}<th class="text-center">Actions</th>{% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for svc in services_studio %}
+                <tr>
+                    <td><strong>{{ svc.libelle }}</strong></td>
+                    <td><span class="section-pill pill-studio">Studio</span></td>
+                    <td><span class="prix-badge">{{ "{:,.0f}".format(svc.prix).replace(',', ' ') }} FCFA</span></td>
+                    {% if role == 'Administrateur' %}
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-outline-primary py-0 px-2 me-1"
+                                data-bs-toggle="modal" data-bs-target="#modalModifier"
+                                onclick="ouvrirModifier({{ svc.id }}, '{{ svc.libelle }}', '{{ svc.section }}', {{ svc.prix }})">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <form method="POST" action="/services/supprimer/{{ svc.id }}" style="display:inline;"
+                              onsubmit="return confirm('Supprimer « {{ svc.libelle }} » ?')">
+                            <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% else %}
+                <tr><td colspan="4" class="empty-row">Aucun service Studio</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- SECTION SONORISATION -->
+    <div class="section-card">
+        <div class="section-header sono">
+            <div>
+                <div class="s-title"><i class="bi bi-speaker me-2"></i>Sonorisation</div>
+                <div class="s-count">{{ services_sono|length }} service(s)</div>
+            </div>
+        </div>
+        <table class="svc-table">
+            <thead>
+                <tr>
+                    <th>Libellé du service</th>
+                    <th>Section</th>
+                    <th>Prix unitaire</th>
+                    {% if role == 'Administrateur' %}<th class="text-center">Actions</th>{% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for svc in services_sono %}
+                <tr>
+                    <td><strong>{{ svc.libelle }}</strong></td>
+                    <td><span class="section-pill pill-sono">Sonorisation</span></td>
+                    <td><span class="prix-badge">{{ "{:,.0f}".format(svc.prix).replace(',', ' ') }} FCFA</span></td>
+                    {% if role == 'Administrateur' %}
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-outline-primary py-0 px-2 me-1"
+                                data-bs-toggle="modal" data-bs-target="#modalModifier"
+                                onclick="ouvrirModifier({{ svc.id }}, '{{ svc.libelle }}', '{{ svc.section }}', {{ svc.prix }})">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <form method="POST" action="/services/supprimer/{{ svc.id }}" style="display:inline;"
+                              onsubmit="return confirm('Supprimer « {{ svc.libelle }} » ?')">
+                            <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% else %}
+                <tr><td colspan="4" class="empty-row">Aucun service Sonorisation</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- SECTION AUTRES -->
+    {% if services_autres %}
+    <div class="section-card">
+        <div class="section-header autres">
+            <div>
+                <div class="s-title"><i class="bi bi-collection me-2"></i>Autres</div>
+                <div class="s-count">{{ services_autres|length }} service(s)</div>
+            </div>
+        </div>
+        <table class="svc-table">
+            <thead>
+                <tr>
+                    <th>Libellé du service</th>
+                    <th>Section</th>
+                    <th>Prix unitaire</th>
+                    {% if role == 'Administrateur' %}<th class="text-center">Actions</th>{% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for svc in services_autres %}
+                <tr>
+                    <td><strong>{{ svc.libelle }}</strong></td>
+                    <td><span class="section-pill pill-autres">{{ svc.section }}</span></td>
+                    <td><span class="prix-badge">{{ "{:,.0f}".format(svc.prix).replace(',', ' ') }} FCFA</span></td>
+                    {% if role == 'Administrateur' %}
+                    <td class="text-center">
+                        <button class="btn btn-sm btn-outline-primary py-0 px-2 me-1"
+                                data-bs-toggle="modal" data-bs-target="#modalModifier"
+                                onclick="ouvrirModifier({{ svc.id }}, '{{ svc.libelle }}', '{{ svc.section }}', {{ svc.prix }})">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                        <form method="POST" action="/services/supprimer/{{ svc.id }}" style="display:inline;"
+                              onsubmit="return confirm('Supprimer « {{ svc.libelle }} » ?')">
+                            <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </form>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+
+</div>
+
+<!-- MODAL MODIFIER -->
+<div class="modal fade" id="modalModifier" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="bi bi-pencil me-2"></i>Modifier le service</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" id="formModifier">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Section</label>
+                        <select class="form-select" name="section" id="mod_section" required>
+                            <option value="Studio">Studio</option>
+                            <option value="Sonorisation">Sonorisation</option>
+                            <option value="Général">Général</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Libellé du service</label>
+                        <input type="text" class="form-control" name="libelle" id="mod_libelle" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Prix (FCFA)</label>
+                        <input type="number" class="form-control" name="prix" id="mod_prix" min="0" step="500">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-ks"><i class="bi bi-check-lg me-1"></i>Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    function ouvrirModifier(id, libelle, section, prix) {
+        document.getElementById('formModifier').action = `/services/modifier/${id}`;
+        document.getElementById('mod_libelle').value = libelle;
+        document.getElementById('mod_section').value = section;
+        document.getElementById('mod_prix').value    = prix;
+    }
+</script>
+<script>
+let alertesOuvert = false;
+function toggleAlertes() {
+    const panneau = document.getElementById('panneauAlertes');
+    alertesOuvert = !alertesOuvert;
+    panneau.style.display = alertesOuvert ? 'block' : 'none';
+    if (alertesOuvert) chargerAlertes();
+}
+document.addEventListener('click', function(e) {
+    const btn = document.getElementById('btnCloche');
+    const panneau = document.getElementById('panneauAlertes');
+    if (btn && panneau && !btn.contains(e.target) && !panneau.contains(e.target)) {
+        panneau.style.display = 'none'; alertesOuvert = false;
+    }
+});
+function chargerAlertes() {
+    fetch('/api/alertes').then(r => r.json()).then(data => {
+        const liste = document.getElementById('listeAlertes');
+        const badge = document.getElementById('badgeAlertes');
+        const nbHead = document.getElementById('nbAlertesHead');
+        const icone = document.getElementById('iconeCloche');
+        const nb = data.length;
+        nbHead.textContent = nb;
+        if (nb > 0) { badge.textContent = nb > 9 ? '9+' : nb; badge.style.display = 'flex'; icone.style.color = '#e94560'; }
+        else { badge.style.display = 'none'; icone.style.color = '#6b7280'; }
+        if (data.length === 0) {
+            liste.innerHTML = `<div style="text-align:center;padding:24px;color:#9ca3af;"><i class="bi bi-check-circle" style="font-size:2rem;color:#10b981;display:block;margin-bottom:8px;"></i><div style="font-size:.82rem;">Aucune prestation imminente</div></div>`;
+            return;
+        }
+        liste.innerHTML = data.map(a => `
+            <div style="padding:10px 12px;border-radius:10px;margin-bottom:6px;display:flex;gap:10px;border-left:4px solid ${a.niveau=='danger'?'#e94560':a.niveau=='warning'?'#f59e0b':'#6c5ce7'};background:${a.niveau=='danger'?'#fff5f7':a.niveau=='warning'?'#fffbeb':'#f5f3ff'};cursor:pointer;" onclick="window.location='/agenda'">
+                <div style="flex:1;min-width:0;">
+                    <div style="display:flex;justify-content:space-between;gap:4px;">
+                        <div style="font-size:.8rem;font-weight:700;color:#1a1a2e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a.titre}</div>
+                        <span style="font-size:.68rem;font-weight:700;padding:1px 7px;border-radius:10px;background:${a.niveau=='danger'?'#fee2e2':a.niveau=='warning'?'#fef3c7':'#ede9fe'};color:${a.niveau=='danger'?'#991b1b':a.niveau=='warning'?'#92400e':'#5b21b6'};flex-shrink:0;">${a.label}</span>
+                    </div>
+                    <div style="font-size:.7rem;color:#6b7280;margin-top:2px;">
+                        <i class="bi bi-calendar3 me-1"></i>${a.date}
+                        ${a.heure ? `<i class="bi bi-clock ms-2 me-1"></i>${a.heure}` : ''}
+                        ${a.client ? `<i class="bi bi-person ms-2 me-1"></i>${a.client}` : ''}
+                    </div>
+                </div>
+            </div>`).join('');
+    }).catch(() => {});
+}
+function initBadgeAlertes() {
+    fetch('/api/alertes').then(r => r.json()).then(data => {
+        const badge = document.getElementById('badgeAlertes');
+        const icone = document.getElementById('iconeCloche');
+        if (data.length > 0) { badge.textContent = data.length > 9 ? '9+' : data.length; badge.style.display = 'flex'; icone.style.color = '#e94560'; }
+    }).catch(() => {});
+}
+document.addEventListener('DOMContentLoaded', initBadgeAlertes);
+</script>
+    <!-- Service Worker PWA -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(reg => console.log('SW enregistré:', reg.scope))
+            .catch(err => console.log('SW erreur:', err));
+        });
+      }
+    </script>
+</body>
+</html>

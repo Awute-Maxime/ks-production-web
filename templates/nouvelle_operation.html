@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PWA -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#e94560">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="KS Production">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/icons/favicon-16x16.png">
+    <title>Nouvelle Opération — KS Production</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --ks-primary: #1a1a2e;
+            --ks-accent: #e94560;
+        }
+        body { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 240px; min-height: 100vh; background: var(--ks-primary);
+            position: fixed; left: 0; top: 0; padding-top: 20px; z-index: 100;
+        }
+        .sidebar .brand {
+            color: #fff; font-size: 1.2rem; font-weight: 700;
+            padding: 10px 20px 20px; border-bottom: 1px solid #ffffff22;
+        }
+        .sidebar .brand span { color: var(--ks-accent); }
+        .sidebar .nav-link {
+            color: #aab4c4; padding: 10px 20px; display: flex;
+            align-items: center; gap: 10px; transition: all .2s;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            color: #fff; background: var(--ks-accent); border-radius: 8px; margin: 0 8px;
+        }
+
+        /* MAIN */
+        .main-content { margin-left: 240px; padding: 25px; }
+
+        /* TOPBAR */
+        .topbar {
+            background: #fff; border-radius: 12px; padding: 12px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 25px; box-shadow: 0 2px 8px #0001;
+        }
+
+        /* FORM CARD */
+        .form-card {
+            background: #fff; border-radius: 14px; padding: 30px;
+            box-shadow: 0 2px 10px #0001; max-width: 700px; margin: 0 auto;
+        }
+        .form-card .form-label { font-weight: 600; color: #444; font-size: .9rem; }
+        .form-card .form-control, .form-card .form-select {
+            border-radius: 8px; border: 1.5px solid #e0e0e0;
+            padding: 10px 14px; transition: border-color .2s;
+        }
+        .form-card .form-control:focus, .form-card .form-select:focus {
+            border-color: var(--ks-accent); box-shadow: 0 0 0 3px #e9456022;
+        }
+
+        /* TYPE SELECTOR */
+        .type-selector { display: flex; gap: 15px; margin-bottom: 5px; }
+        .type-btn {
+            flex: 1; padding: 15px; border-radius: 10px; border: 2px solid #e0e0e0;
+            background: #f8f9fa; cursor: pointer; text-align: center; transition: all .2s;
+        }
+        .type-btn:hover { border-color: #aaa; }
+        .type-btn.selected-recette {
+            border-color: #00b894; background: #e8f5e9; color: #00b894;
+        }
+        .type-btn.selected-depense {
+            border-color: #d63031; background: #fdecea; color: #d63031;
+        }
+        .type-btn .icon { font-size: 1.6rem; display: block; margin-bottom: 4px; }
+        .type-btn .label { font-weight: 700; font-size: .9rem; }
+
+        /* SECTION SELECTOR */
+        .section-selector { display: flex; gap: 12px; }
+        .section-btn {
+            flex: 1; padding: 12px; border-radius: 10px; border: 2px solid #e0e0e0;
+            background: #f8f9fa; cursor: pointer; text-align: center; transition: all .2s;
+        }
+        .section-btn.selected {
+            border-color: #0984e3; background: #e3f2fd; color: #0984e3;
+        }
+
+        .btn-ks { background: var(--ks-accent); border: none; color: #fff; }
+        .btn-ks:hover { background: #c0392b; color: #fff; }
+
+        
+        /* ── RESPONSIVE MOBILE ── */
+        .hamburger-btn {
+            display: none; position: fixed; top: 12px; left: 12px; z-index: 200;
+            background: var(--ks-accent, #e94560); color: #fff; border: none;
+            border-radius: 10px; width: 40px; height: 40px; font-size: 1.1rem;
+            cursor: pointer; align-items: center; justify-content: center;
+            box-shadow: 0 3px 12px rgba(233,69,96,.4); transition: all .2s;
+        }
+        .hamburger-btn:hover { background: #c0392b; }
+        .sidebar-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,.5); z-index: 150; backdrop-filter: blur(2px);
+        }
+        .sidebar-overlay.active { display: block; }
+        @media (max-width: 768px) {
+            .hamburger-btn { display: flex; }
+            .sidebar { transform: translateX(-100%); transition: transform .3s ease; z-index: 160; width: 240px !important; }
+            .sidebar.open { transform: translateX(0); }
+            .main-content, .main { margin-left: 0 !important; padding: 12px !important; padding-top: 60px !important; }
+            .topbar { flex-wrap: wrap; gap: 8px; padding: 10px 12px 10px 60px !important; }
+            .topbar h5 { font-size: .85rem !important; }
+            .table-responsive { overflow-x: auto; }
+            .fac-table, .rel-table, .ops-table, .pai-table { min-width: 700px; }
+            .stats-row { flex-direction: column; }
+            .stat-mini { min-width: unset !important; }
+            .hide-mobile { display: none !important; }
+            .client-grid { grid-template-columns: 1fr !important; }
+            .cal-cell { min-height: 60px !important; }
+            .filter-bar { flex-wrap: wrap; gap: 8px !important; }
+            .filter-bar .form-select, .filter-bar .form-control { width: 100% !important; }
+            .modal-dialog { margin: 8px !important; max-width: calc(100vw - 16px) !important; }
+            .modal-body { max-height: 70vh; overflow-y: auto; }
+            .row.g-3 > .col-md-3, .row.g-3 > .col-md-4,
+            .row.g-2 > .col-md-4, .row.g-2 > .col-md-7,
+            .row.g-2 > .col-md-5, .row.g-2 > .col-md-8 { flex: 0 0 100%; max-width: 100%; }
+        }
+        @media (max-width: 480px) {
+            .topbar .d-flex { flex-wrap: wrap; }
+            .stat-card .val { font-size: .95rem !important; }
+        }
+        }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="brand">🎵 KS <span>Production</span><small>Nouvelle opération</small></div>
+    <nav>
+        <div class="nav-section">Menu</div>
+        <a href="/dashboard" class="nav-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        <a href="/factures" class="nav-link"><i class="bi bi-receipt"></i> Factures</a>
+        <a href="/proformas" class="nav-link"><i class="bi bi-file-earmark-text"></i> Proformas</a>
+        <a href="/agenda" class="nav-link"><i class="bi bi-calendar3"></i> Agenda</a>
+        <a href="/operations" class="nav-link active"><i class="bi bi-arrow-left-right"></i> Opérations</a>
+        <a href="/clients" class="nav-link"><i class="bi bi-people"></i> Clients</a>
+        <div class="nav-section">Finance</div>
+        <a href="/paiements" class="nav-link"><i class="bi bi-clock-history"></i> Paiements</a>
+        <a href="/relances" class="nav-link"><i class="bi bi-bell-fill"></i> Relances</a>
+        <a href="/rapport" class="nav-link"><i class="bi bi-bar-chart-line"></i> Rapport</a>
+        {% if role == 'Administrateur' %}
+        <div class="nav-section">Admin</div>
+        <a href="/services" class="nav-link"><i class="bi bi-grid"></i> Services</a>
+        <a href="/utilisateurs" class="nav-link"><i class="bi bi-person-gear"></i> Utilisateurs</a>
+        <a href="/parametres" class="nav-link"><i class="bi bi-gear"></i> Paramètres</a>
+        <a href="/sauvegarde" class="nav-link"><i class="bi bi-cloud-arrow-down"></i> Sauvegarde</a>
+        <a href="/reinitialiser" class="nav-link" style="color:#e74c3c;"><i class="bi bi-arrow-counterclockwise"></i> Réinitialiser</a>
+        {% endif %}
+    </nav>
+    <div class="sidebar-footer">
+        <a href="/profil" class="nav-link"><i class="bi bi-person-circle"></i> Mon Profil</a>
+        <a href="/logout" class="nav-link" style="color:#e74c3c;"><i class="bi bi-box-arrow-left"></i> Déconnexion</a>
+    </div>
+</div>
+
+<button class="hamburger-btn" onclick="toggleSidebar()" id="hamburgerBtn">
+    <i class="bi bi-list" id="hamburgerIcon"></i>
+</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+        <div>
+            <h5 style="margin:0; font-weight:700; color:var(--ks-primary);">
+                <i class="bi bi-plus-circle me-2" style="color:var(--ks-accent);"></i>
+                Nouvelle Opération
+            </h5>
+            <small class="text-muted">Enregistrer une recette ou une dépense</small>
+        </div>
+        <a href="/operations" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Retour
+        </a>
+    </div>
+
+    <!-- FORM -->
+    <div class="form-card">
+        <form method="POST" action="/operations/nouvelle">
+
+            <!-- TYPE D'OPÉRATION -->
+            <div class="mb-4">
+                <label class="form-label">Type d'opération <span class="text-danger">*</span></label>
+                <div class="type-selector" id="typeSelector">
+                    <div class="type-btn" id="btn-recette" onclick="selectType('Recettes')">
+                        <span class="icon">💰</span>
+                        <span class="label">Recette</span>
+                        <small class="d-block text-muted">Entrée d'argent</small>
+                    </div>
+                    <div class="type-btn" id="btn-depense" onclick="selectType('Depenses')">
+                        <span class="icon">💸</span>
+                        <span class="label">Dépense</span>
+                        <small class="d-block text-muted">Sortie d'argent</small>
+                    </div>
+                </div>
+                <input type="hidden" name="type_operation" id="type_operation" required>
+            </div>
+
+            <!-- CLIENT / LIBELLÉ -->
+            <div class="mb-3">
+                <label class="form-label">Client / Libellé</label>
+                <div class="d-flex gap-2">
+                    <select class="form-select" id="selectClient" onchange="remplirClient()">
+                        <option value="">-- Choisir un client existant --</option>
+                        {% for client in clients %}
+                        <option value="{{ client.nom }}">{{ client.nom }}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="text" class="form-control" name="nom_client" id="nom_client"
+                        placeholder="Ou saisir un nom..." style="max-width:260px;">
+                </div>
+                <small class="text-muted">Pour une dépense interne, indiquer le libellé (ex: Salaires, Loyer…)</small>
+            </div>
+
+            <!-- SERVICE / DÉSIGNATION -->
+            <div class="mb-3">
+                <label class="form-label">Service / Désignation <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" name="service" id="service"
+                    placeholder="Ex: Sonorisation Mariage, Salaires…" required>
+                <!-- Suggestions rapides -->
+                <div class="mt-2 d-flex flex-wrap gap-2" id="suggestions">
+                    <span class="badge bg-light text-dark border" style="cursor:pointer;"
+                        onclick="remplirService('Sonorisation Événement')">Sono Événement</span>
+                    <span class="badge bg-light text-dark border" style="cursor:pointer;"
+                        onclick="remplirService('Sonorisation Mariage')">Sono Mariage</span>
+                    <span class="badge bg-light text-dark border" style="cursor:pointer;"
+                        onclick="remplirService('Sonorisation Concert')">Sono Concert</span>
+                    <span class="badge bg-light text-dark border" style="cursor:pointer;"
+                        onclick="remplirService('Enregistrement Studio')">Studio</span>
+                    <span class="badge bg-light text-dark border" style="cursor:pointer;"
+                        onclick="remplirService('Mixage')">Mixage</span>
+                    <span class="badge bg-light text-dark border" style="cursor:pointer;"
+                        onclick="remplirService('Location Matériel')">Location</span>
+                    <span class="badge bg-light text-dark border" style="cursor:pointer;"
+                        onclick="remplirService('Salaires / Prestation')">Salaires</span>
+                    <span class="badge bg-light text-dark border" style="cursor:pointer;"
+                        onclick="remplirService('Carburant / Transport')">Carburant</span>
+                </div>
+            </div>
+
+            <!-- SECTION -->
+            <div class="mb-3">
+                <label class="form-label">Section <span class="text-danger">*</span></label>
+                <div class="section-selector">
+                    <div class="section-btn" id="sec-studio" onclick="selectSection('Studio')">
+                        <i class="bi bi-mic" style="font-size:1.3rem;"></i>
+                        <div class="fw-bold mt-1">Studio</div>
+                    </div>
+                    <div class="section-btn" id="sec-sono" onclick="selectSection('Sonorisation')">
+                        <i class="bi bi-speaker" style="font-size:1.3rem;"></i>
+                        <div class="fw-bold mt-1">Sonorisation</div>
+                    </div>
+                    <div class="section-btn" id="sec-general" onclick="selectSection('Général')">
+                        <i class="bi bi-building" style="font-size:1.3rem;"></i>
+                        <div class="fw-bold mt-1">Général</div>
+                    </div>
+                </div>
+                <input type="hidden" name="section" id="section" required>
+            </div>
+
+            <!-- MONTANT -->
+            <div class="mb-3">
+                <label class="form-label">Montant TTC (FCFA) <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-cash-coin"></i></span>
+                    <input type="number" class="form-control" name="montant_ttc" id="montant_ttc"
+                        placeholder="Ex: 150000" min="0" step="500" required>
+                    <span class="input-group-text">FCFA</span>
+                </div>
+                <div id="montant_affiche" class="mt-1 text-muted" style="font-size:.85rem;"></div>
+            </div>
+
+            <!-- CATÉGORIE (cachée, par défaut Manuel) -->
+            <input type="hidden" name="categorie" value="Manuel">
+
+            <!-- BOUTONS -->
+            <div class="d-flex gap-3 mt-4">
+                <button type="submit" class="btn btn-ks px-4" id="btnSubmit" disabled>
+                    <i class="bi bi-check-lg me-2"></i>Enregistrer l'opération
+                </button>
+                <a href="/operations" class="btn btn-outline-secondary px-4">
+                    <i class="bi bi-x-lg me-2"></i>Annuler
+                </a>
+            </div>
+
+        </form>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    let typeChoisi = '';
+    let sectionChoisie = '';
+
+    function selectType(type) {
+        typeChoisi = type;
+        document.getElementById('type_operation').value = type;
+        document.getElementById('btn-recette').className = 'type-btn' + (type === 'Recettes' ? ' selected-recette' : '');
+        document.getElementById('btn-depense').className = 'type-btn' + (type === 'Depenses' ? ' selected-depense' : '');
+        verifierFormulaire();
+    }
+
+    function selectSection(section) {
+        sectionChoisie = section;
+        document.getElementById('section').value = section;
+        ['studio', 'sono', 'general'].forEach(s => {
+            document.getElementById('sec-' + s).className = 'section-btn';
+        });
+        const map = {'Studio': 'studio', 'Sonorisation': 'sono', 'Général': 'general'};
+        document.getElementById('sec-' + map[section]).className = 'section-btn selected';
+        verifierFormulaire();
+    }
+
+    function remplirClient() {
+        const val = document.getElementById('selectClient').value;
+        if (val) document.getElementById('nom_client').value = val;
+    }
+
+    function remplirService(val) {
+        document.getElementById('service').value = val;
+        verifierFormulaire();
+    }
+
+    function verifierFormulaire() {
+        const ok = typeChoisi && sectionChoisie &&
+                   document.getElementById('service').value &&
+                   document.getElementById('montant_ttc').value;
+        document.getElementById('btnSubmit').disabled = !ok;
+    }
+
+    // Affichage du montant en lettres
+    document.getElementById('montant_ttc').addEventListener('input', function() {
+        const val = parseFloat(this.value);
+        if (!isNaN(val) && val > 0) {
+            document.getElementById('montant_affiche').textContent =
+                '→ ' + val.toLocaleString('fr-FR') + ' FCFA';
+        } else {
+            document.getElementById('montant_affiche').textContent = '';
+        }
+        verifierFormulaire();
+    });
+
+    document.getElementById('service').addEventListener('input', verifierFormulaire);
+</script>
+    <!-- Service Worker PWA -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(reg => console.log('SW enregistré:', reg.scope))
+            .catch(err => console.log('SW erreur:', err));
+        });
+      }
+    </script>
+</body>
+</html>

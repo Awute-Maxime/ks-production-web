@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PWA -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#e94560">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="KS Production">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/icons/favicon-16x16.png">
+    <title>Opérations — KS Production</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --ks-primary: #1a1a2e;
+            --ks-accent: #e94560;
+            --ks-green: #00b894;
+            --ks-red: #d63031;
+            --ks-orange: #e17055;
+            --ks-sidebar: #16213e;
+        }
+        body { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
+
+        /* SIDEBAR */
+        .sidebar {
+            width: 240px; min-height: 100vh; background: var(--ks-primary);
+            position: fixed; left: 0; top: 0; padding-top: 20px; z-index: 100;
+        }
+        .sidebar .brand {
+            color: #fff; font-size: 1.2rem; font-weight: 700;
+            padding: 10px 20px 20px; border-bottom: 1px solid #ffffff22;
+        }
+        .sidebar .brand span { color: var(--ks-accent); }
+        .sidebar .nav-link {
+            color: #aab4c4; padding: 10px 20px; display: flex;
+            align-items: center; gap: 10px; transition: all .2s;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            color: #fff; background: var(--ks-accent); border-radius: 8px;
+            margin: 0 8px;
+        }
+        .sidebar .nav-link i { font-size: 1.1rem; }
+
+        /* MAIN */
+        .main-content { margin-left: 240px; padding: 25px; }
+
+        /* TOPBAR */
+        .topbar {
+            background: #fff; border-radius: 12px; padding: 12px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 25px; box-shadow: 0 2px 8px #0001;
+        }
+        .topbar h5 { margin: 0; font-weight: 700; color: var(--ks-primary); }
+
+        /* STAT CARDS */
+        .stat-card {
+            border-radius: 14px; padding: 18px 22px; color: #fff;
+            display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 4px 15px #0002;
+        }
+        .stat-card .label { font-size: .8rem; opacity: .85; margin-bottom: 4px; }
+        .stat-card .value { font-size: 1.4rem; font-weight: 700; }
+        .stat-card .icon { font-size: 2.2rem; opacity: .4; }
+        .card-recettes { background: linear-gradient(135deg, #00b894, #00cec9); }
+        .card-depenses { background: linear-gradient(135deg, #d63031, #e17055); }
+        .card-solde-pos { background: linear-gradient(135deg, #0984e3, #6c5ce7); }
+        .card-solde-neg { background: linear-gradient(135deg, #636e72, #2d3436); }
+
+        /* TABLE */
+        .table-card {
+            background: #fff; border-radius: 14px;
+            box-shadow: 0 2px 10px #0001; overflow: hidden;
+        }
+        .table-card .card-header {
+            background: var(--ks-primary); color: #fff; padding: 15px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .table thead th {
+            background: #f8f9fa; font-size: .8rem; text-transform: uppercase;
+            letter-spacing: .05em; color: #6c757d; border: none;
+        }
+        .table tbody tr:hover { background: #f8f9fe; }
+        .badge-recette { background: #e8f5e9; color: #00b894; }
+        .badge-depense { background: #fdecea; color: #d63031; }
+        .badge-studio { background: #e3f2fd; color: #0984e3; }
+        .badge-sono { background: #fff3e0; color: #e17055; }
+
+        /* FILTER BAR */
+        .filter-bar {
+            background: #fff; border-radius: 12px; padding: 15px 20px;
+            margin-bottom: 20px; box-shadow: 0 2px 8px #0001;
+            display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;
+        }
+        .filter-bar .form-label { font-size: .75rem; font-weight: 600; color: #6c757d; margin-bottom: 4px; }
+        .filter-bar .form-select, .filter-bar .form-control { font-size: .85rem; }
+
+        /* FLASH MESSAGES */
+        .flash-zone { margin-bottom: 15px; }
+
+        /* BTN */
+        .btn-ks { background: var(--ks-accent); border: none; color: #fff; }
+        .btn-ks:hover { background: #c0392b; color: #fff; }
+
+        
+        /* ── RESPONSIVE MOBILE ── */
+        .hamburger-btn {
+            display: none; position: fixed; top: 12px; left: 12px; z-index: 200;
+            background: var(--ks-accent, #e94560); color: #fff; border: none;
+            border-radius: 10px; width: 40px; height: 40px; font-size: 1.1rem;
+            cursor: pointer; align-items: center; justify-content: center;
+            box-shadow: 0 3px 12px rgba(233,69,96,.4); transition: all .2s;
+        }
+        .hamburger-btn:hover { background: #c0392b; }
+        .sidebar-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,.5); z-index: 150; backdrop-filter: blur(2px);
+        }
+        .sidebar-overlay.active { display: block; }
+        @media (max-width: 768px) {
+            .hamburger-btn { display: flex; }
+            .sidebar { transform: translateX(-100%); transition: transform .3s ease; z-index: 160; width: 240px !important; }
+            .sidebar.open { transform: translateX(0); }
+            .main-content, .main { margin-left: 0 !important; padding: 12px !important; padding-top: 60px !important; }
+            .topbar { flex-wrap: wrap; gap: 8px; padding: 10px 12px 10px 60px !important; }
+            .topbar h5 { font-size: .85rem !important; }
+            .table-responsive { overflow-x: auto; }
+            .fac-table, .rel-table, .ops-table, .pai-table { min-width: 700px; }
+            .stats-row { flex-direction: column; }
+            .stat-mini { min-width: unset !important; }
+            .hide-mobile { display: none !important; }
+            .client-grid { grid-template-columns: 1fr !important; }
+            .cal-cell { min-height: 60px !important; }
+            .filter-bar { flex-wrap: wrap; gap: 8px !important; }
+            .filter-bar .form-select, .filter-bar .form-control { width: 100% !important; }
+            .modal-dialog { margin: 8px !important; max-width: calc(100vw - 16px) !important; }
+            .modal-body { max-height: 70vh; overflow-y: auto; }
+            .row.g-3 > .col-md-3, .row.g-3 > .col-md-4,
+            .row.g-2 > .col-md-4, .row.g-2 > .col-md-7,
+            .row.g-2 > .col-md-5, .row.g-2 > .col-md-8 { flex: 0 0 100%; max-width: 100%; }
+        }
+        @media (max-width: 480px) {
+            .topbar .d-flex { flex-wrap: wrap; }
+            .stat-card .val { font-size: .95rem !important; }
+        }
+        }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="brand">🎵 KS <span>Production</span><small>Opérations</small></div>
+    <nav>
+        <div class="nav-section">Menu</div>
+        <a href="/dashboard" class="nav-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        <a href="/factures" class="nav-link"><i class="bi bi-receipt"></i> Factures</a>
+        <a href="/proformas" class="nav-link"><i class="bi bi-file-earmark-text"></i> Proformas</a>
+        <a href="/agenda" class="nav-link"><i class="bi bi-calendar3"></i> Agenda</a>
+        <a href="/operations" class="nav-link active"><i class="bi bi-arrow-left-right"></i> Opérations</a>
+        <a href="/clients" class="nav-link"><i class="bi bi-people"></i> Clients</a>
+        <div class="nav-section">Finance</div>
+        <a href="/paiements" class="nav-link"><i class="bi bi-clock-history"></i> Paiements</a>
+        <a href="/relances" class="nav-link"><i class="bi bi-bell-fill"></i> Relances</a>
+        <a href="/rapport" class="nav-link"><i class="bi bi-bar-chart-line"></i> Rapport</a>
+        {% if role == 'Administrateur' %}
+        <div class="nav-section">Admin</div>
+        <a href="/services" class="nav-link"><i class="bi bi-grid"></i> Services</a>
+        <a href="/utilisateurs" class="nav-link"><i class="bi bi-person-gear"></i> Utilisateurs</a>
+        <a href="/parametres" class="nav-link"><i class="bi bi-gear"></i> Paramètres</a>
+        <a href="/sauvegarde" class="nav-link"><i class="bi bi-cloud-arrow-down"></i> Sauvegarde</a>
+        <a href="/reinitialiser" class="nav-link" style="color:#e74c3c;"><i class="bi bi-arrow-counterclockwise"></i> Réinitialiser</a>
+        {% endif %}
+    </nav>
+    <div class="sidebar-footer">
+        <a href="/profil" class="nav-link"><i class="bi bi-person-circle"></i> Mon Profil</a>
+        <a href="/logout" class="nav-link" style="color:#e74c3c;"><i class="bi bi-box-arrow-left"></i> Déconnexion</a>
+    </div>
+</div>
+
+<button class="hamburger-btn" onclick="toggleSidebar()" id="hamburgerBtn">
+    <i class="bi bi-list" id="hamburgerIcon"></i>
+</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+        <div>
+            <h5><i class="bi bi-arrow-left-right me-2" style="color:var(--ks-accent);"></i>Gestion des Opérations</h5>
+            <small class="text-muted">{{ nb_operations }} opération(s) trouvée(s)</small>
+        </div>
+        <div class="d-flex align-items-center gap-3">
+            <span class="badge bg-secondary">{{ role }}</span>
+            <span class="text-muted" style="font-size:.85rem;">👤 {{ username }}</span>
+            {% if role != 'Lecture seule' %}
+            <a href="/operations/nouvelle" class="btn btn-ks btn-sm">
+                <i class="bi bi-plus-lg me-1"></i>Nouvelle Opération
+            </a>
+            {% endif %}
+            <!-- CLOCHE ALERTES -->
+            <div class="position-relative">
+                <button id="btnCloche" onclick="toggleAlertes()"
+                        style="background:none; border:none; cursor:pointer; position:relative; padding:4px 8px;">
+                    <i class="bi bi-bell-fill" style="font-size:1.25rem; color:#6b7280;" id="iconeCloche"></i>
+                    <span id="badgeAlertes"
+                          style="display:none; position:absolute; top:0px; right:2px;
+                                 background:#e94560; color:#fff; border-radius:50%;
+                                 width:17px; height:17px; font-size:.58rem; font-weight:700;
+                                 align-items:center; justify-content:center; line-height:1;">0</span>
+                </button>
+                <div id="panneauAlertes"
+                     style="display:none; position:absolute; right:0; top:44px; width:340px; z-index:9999;
+                            background:#fff; border-radius:14px; box-shadow:0 8px 30px rgba(0,0,0,.15);
+                            overflow:hidden; border:1px solid #f0f0f0;">
+                    <div style="background:#1a1a2e; color:#fff; padding:12px 16px; display:flex; justify-content:space-between; align-items:center;">
+                        <span style="font-size:.82rem; font-weight:700;"><i class="bi bi-bell-fill me-2" style="color:#e94560;"></i>Alertes prestations</span>
+                        <span id="nbAlertesHead" style="background:#e94560; color:#fff; border-radius:20px; padding:1px 8px; font-size:.7rem; font-weight:700;">0</span>
+                    </div>
+                    <div id="listeAlertes" style="max-height:360px; overflow-y:auto; padding:8px;">
+                        <div style="text-align:center; padding:20px; color:#9ca3af; font-size:.8rem;">
+                            <i class="bi bi-hourglass" style="font-size:1.5rem; display:block; margin-bottom:6px;"></i>Chargement...
+                        </div>
+                    </div>
+                    <div style="padding:10px 16px; border-top:1px solid #f0f0f0; text-align:center;">
+                        <a href="/agenda" style="font-size:.75rem; color:#6c5ce7; text-decoration:none; font-weight:600;">
+                            <i class="bi bi-calendar3 me-1"></i>Voir l'agenda complet
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FLASH MESSAGES -->
+    <div class="flash-zone">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            {% endfor %}
+        {% endwith %}
+    </div>
+
+    <!-- STAT CARDS -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="stat-card card-recettes">
+                <div>
+                    <div class="label">Total Recettes</div>
+                    <div class="value">{{ total_recettes }} FCFA</div>
+                </div>
+                <i class="bi bi-arrow-up-circle icon"></i>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card card-depenses">
+                <div>
+                    <div class="label">Total Dépenses</div>
+                    <div class="value">{{ total_depenses }} FCFA</div>
+                </div>
+                <i class="bi bi-arrow-down-circle icon"></i>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="stat-card {% if solde_positif %}card-solde-pos{% else %}card-solde-neg{% endif %}">
+                <div>
+                    <div class="label">Solde Net</div>
+                    <div class="value">{{ solde }} FCFA</div>
+                </div>
+                <i class="bi bi-wallet2 icon"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- FILTRES -->
+    <form method="GET" action="/operations">
+        <div class="filter-bar">
+            <div>
+                <div class="form-label">Type</div>
+                <select name="type" class="form-select form-select-sm" style="width:150px;">
+                    <option value="">Tous</option>
+                    <option value="Recettes" {% if filtre_type == 'Recettes' %}selected{% endif %}>Recettes</option>
+                    <option value="Depenses" {% if filtre_type == 'Depenses' %}selected{% endif %}>Dépenses</option>
+                </select>
+            </div>
+            <div>
+                <div class="form-label">Section</div>
+                <select name="section" class="form-select form-select-sm" style="width:150px;">
+                    <option value="">Toutes</option>
+                    <option value="Studio" {% if filtre_section == 'Studio' %}selected{% endif %}>Studio</option>
+                    <option value="Sonorisation" {% if filtre_section == 'Sonorisation' %}selected{% endif %}>Sonorisation</option>
+                </select>
+            </div>
+            <div>
+                <div class="form-label">Mois</div>
+                <input type="month" name="mois" class="form-control form-control-sm"
+                    value="{{ filtre_mois }}" style="width:160px;">
+            </div>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="bi bi-funnel me-1"></i>Filtrer
+                </button>
+                <a href="/operations" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-x-lg"></i> Reset
+                </a>
+            </div>
+        </div>
+    </form>
+
+    <!-- TABLE -->
+    <div class="table-card">
+        <div class="card-header">
+            <span><i class="bi bi-list-ul me-2"></i>Liste des Opérations</span>
+            <small style="opacity:.7;">{{ nb_operations }} résultat(s)</small>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 align-middle">
+                <thead>
+                    <tr>
+                        <th>N° Opération</th>
+                        <th>Date</th>
+                        <th>Client / Libellé</th>
+                        <th>Service</th>
+                        <th>Section</th>
+                        <th>Type</th>
+                        <th class="text-end">Montant (FCFA)</th>
+                        <th>Créé par</th>
+                        {% if role == 'Administrateur' %}<th class="text-center">Action</th>{% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for op in operations %}
+                    <tr>
+                        <td><strong style="color:var(--ks-accent);">{{ op.numero }}</strong></td>
+                        <td>{{ op.date.strftime('%d/%m/%Y') }}</td>
+                        <td>{{ op.nom_client or '—' }}</td>
+                        <td style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                            {{ op.service }}
+                        </td>
+                        <td>
+                            {% if op.section == 'Studio' %}
+                                <span class="badge badge-studio rounded-pill px-3">Studio</span>
+                            {% elif op.section == 'Sonorisation' %}
+                                <span class="badge badge-sono rounded-pill px-3">Sono</span>
+                            {% else %}
+                                <span class="badge bg-light text-dark rounded-pill px-3">{{ op.section or '—' }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if op.type_operation == 'Recettes' %}
+                                <span class="badge badge-recette rounded-pill px-3">
+                                    <i class="bi bi-arrow-up me-1"></i>Recette
+                                </span>
+                            {% else %}
+                                <span class="badge badge-depense rounded-pill px-3">
+                                    <i class="bi bi-arrow-down me-1"></i>Dépense
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td class="text-end fw-bold">
+                            <span style="color: {% if op.type_operation == 'Recettes' %}var(--ks-green){% else %}var(--ks-red){% endif %};">
+                                {% if op.type_operation == 'Depenses' %}−{% endif %}
+                                {{ "{:,.0f}".format(op.montant_ttc).replace(',', ' ') }}
+                            </span>
+                        </td>
+                        <td><small class="text-muted">{{ op.cree_par }}</small></td>
+                        {% if role == 'Administrateur' %}
+                        <td class="text-center">
+                            <form method="POST" action="/operations/supprimer/{{ op.id }}"
+                                onsubmit="return confirm('Supprimer l\'opération {{ op.numero }} ?')">
+                                <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </form>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="9" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox" style="font-size:2rem; display:block; margin-bottom:8px;"></i>
+                            Aucune opération trouvée
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+let alertesOuvert = false;
+function toggleAlertes() {
+    const panneau = document.getElementById('panneauAlertes');
+    alertesOuvert = !alertesOuvert;
+    panneau.style.display = alertesOuvert ? 'block' : 'none';
+    if (alertesOuvert) chargerAlertes();
+}
+document.addEventListener('click', function(e) {
+    const btn = document.getElementById('btnCloche');
+    const panneau = document.getElementById('panneauAlertes');
+    if (btn && panneau && !btn.contains(e.target) && !panneau.contains(e.target)) {
+        panneau.style.display = 'none'; alertesOuvert = false;
+    }
+});
+function chargerAlertes() {
+    fetch('/api/alertes').then(r => r.json()).then(data => {
+        const liste = document.getElementById('listeAlertes');
+        const badge = document.getElementById('badgeAlertes');
+        const nbHead = document.getElementById('nbAlertesHead');
+        const icone = document.getElementById('iconeCloche');
+        const nb = data.length;
+        nbHead.textContent = nb;
+        if (nb > 0) { badge.textContent = nb > 9 ? '9+' : nb; badge.style.display = 'flex'; icone.style.color = '#e94560'; }
+        else { badge.style.display = 'none'; icone.style.color = '#6b7280'; }
+        if (data.length === 0) {
+            liste.innerHTML = `<div style="text-align:center;padding:24px;color:#9ca3af;"><i class="bi bi-check-circle" style="font-size:2rem;color:#10b981;display:block;margin-bottom:8px;"></i><div style="font-size:.82rem;">Aucune prestation imminente</div></div>`;
+            return;
+        }
+        liste.innerHTML = data.map(a => `
+            <div style="padding:10px 12px;border-radius:10px;margin-bottom:6px;display:flex;gap:10px;border-left:4px solid ${a.niveau=='danger'?'#e94560':a.niveau=='warning'?'#f59e0b':'#6c5ce7'};background:${a.niveau=='danger'?'#fff5f7':a.niveau=='warning'?'#fffbeb':'#f5f3ff'};cursor:pointer;" onclick="window.location='/agenda'">
+                <div style="flex:1;min-width:0;">
+                    <div style="display:flex;justify-content:space-between;gap:4px;">
+                        <div style="font-size:.8rem;font-weight:700;color:#1a1a2e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${a.titre}</div>
+                        <span style="font-size:.68rem;font-weight:700;padding:1px 7px;border-radius:10px;background:${a.niveau=='danger'?'#fee2e2':a.niveau=='warning'?'#fef3c7':'#ede9fe'};color:${a.niveau=='danger'?'#991b1b':a.niveau=='warning'?'#92400e':'#5b21b6'};flex-shrink:0;">${a.label}</span>
+                    </div>
+                    <div style="font-size:.7rem;color:#6b7280;margin-top:2px;">
+                        <i class="bi bi-calendar3 me-1"></i>${a.date}
+                        ${a.heure ? `<i class="bi bi-clock ms-2 me-1"></i>${a.heure}` : ''}
+                        ${a.client ? `<i class="bi bi-person ms-2 me-1"></i>${a.client}` : ''}
+                    </div>
+                </div>
+            </div>`).join('');
+    }).catch(() => {});
+}
+function initBadgeAlertes() {
+    fetch('/api/alertes').then(r => r.json()).then(data => {
+        const badge = document.getElementById('badgeAlertes');
+        const icone = document.getElementById('iconeCloche');
+        if (data.length > 0) { badge.textContent = data.length > 9 ? '9+' : data.length; badge.style.display = 'flex'; icone.style.color = '#e94560'; }
+    }).catch(() => {});
+}
+document.addEventListener('DOMContentLoaded', initBadgeAlertes);
+</script>
+    <!-- Service Worker PWA -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(reg => console.log('SW enregistré:', reg.scope))
+            .catch(err => console.log('SW erreur:', err));
+        });
+      }
+    </script>
+</body>
+</html>

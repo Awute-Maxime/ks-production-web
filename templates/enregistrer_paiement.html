@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PWA -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#e94560">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="KS Production">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/static/icons/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/static/icons/favicon-16x16.png">
+    <title>Enregistrer un paiement — KS Production</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root { --ks-primary: #1a1a2e; --ks-accent: #e94560; --ks-green: #00b894; }
+        body  { background: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
+
+        .sidebar {
+            width: 200px; min-height: 100vh; background: var(--ks-primary);
+            position: fixed; left: 0; top: 0; z-index: 100; display: flex; flex-direction: column;
+        }
+        .brand { color: #fff; font-size: .95rem; font-weight: 700; padding: 14px 16px 12px; border-bottom: 1px solid rgba(255,255,255,.1); }
+        .brand span { color: var(--ks-accent); }
+        .brand small { display: block; font-size: .58rem; color: rgba(255,255,255,.3); font-weight: 400; }
+        .sidebar nav { flex: 1; padding: 8px 0; }
+        .nav-section { font-size: .58rem; text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,.28); padding: 10px 16px 3px; font-weight: 600; }
+        .nav-link { color: #aab4c4; padding: 8px 16px; display: flex; align-items: center; gap: 8px; font-size: .8rem; transition: all .2s; }
+        .nav-link:hover, .nav-link.active { color: #fff; background: var(--ks-accent); border-radius: 8px; margin: 0 6px; padding: 8px 10px; }
+        .nav-link i { font-size: .88rem; width: 16px; }
+        .sidebar-footer { padding: 8px 6px 14px; border-top: 1px solid rgba(255,255,255,.1); }
+
+        .main-content { margin-left: 200px; padding: 20px; }
+
+        .topbar {
+            background: #fff; border-radius: 12px; padding: 12px 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px; box-shadow: 0 1px 6px rgba(0,0,0,.06);
+        }
+        .topbar h5 { margin: 0; font-weight: 700; color: var(--ks-primary); font-size: .95rem; }
+
+        .recap-facture {
+            background: #fff; border-radius: 14px; padding: 24px;
+            box-shadow: 0 1px 6px rgba(0,0,0,.06); margin-bottom: 20px;
+            border-left: 5px solid var(--ks-accent);
+        }
+        .recap-title { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--ks-accent); margin-bottom: 16px; }
+        .recap-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+        .recap-item .lbl { font-size: .68rem; color: #9ca3af; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 4px; }
+        .recap-item .val { font-size: 1.1rem; font-weight: 800; color: var(--ks-primary); }
+        .recap-item .val.green { color: var(--ks-green); }
+        .recap-item .val.red   { color: var(--ks-accent); }
+
+        .progress-zone { margin-top: 16px; }
+        .progress-label { display: flex; justify-content: space-between; font-size: .75rem; color: #6b7280; margin-bottom: 6px; }
+        .progress { height: 10px; border-radius: 5px; background: #f3f4f6; }
+        .progress-bar-custom { height: 100%; border-radius: 5px; background: linear-gradient(90deg, var(--ks-green), #00cec9); transition: width .5s; }
+
+        .form-card {
+            background: #fff; border-radius: 14px; padding: 24px;
+            box-shadow: 0 1px 6px rgba(0,0,0,.06); max-width: 600px;
+        }
+        .form-title { font-size: .75rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--ks-primary); margin-bottom: 18px; padding-bottom: 10px; border-bottom: 2px solid #f3f4f6; }
+        .form-label { font-weight: 600; color: #444; font-size: .85rem; }
+        .form-control, .form-select { border-radius: 8px; border: 1.5px solid #e0e0e0; padding: 10px 14px; font-size: .88rem; }
+        .form-control:focus, .form-select:focus { border-color: var(--ks-accent); box-shadow: 0 0 0 3px #e9456022; }
+
+        .montants-rapides { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+        .btn-rapide {
+            background: #f0f2f5; border: 1.5px solid #e0e0e0;
+            border-radius: 8px; padding: 5px 12px; font-size: .78rem;
+            cursor: pointer; transition: all .15s; color: #374151;
+        }
+        .btn-rapide:hover { background: var(--ks-primary); color: #fff; border-color: var(--ks-primary); }
+        .btn-rapide.full { background: #d1fae5; border-color: var(--ks-green); color: #065f46; font-weight: 700; }
+        .btn-rapide.full:hover { background: var(--ks-green); color: #fff; }
+
+        .apercu-box {
+            background: #f8f9fa; border-radius: 10px; padding: 14px 18px;
+            margin-top: 16px; border: 1.5px solid #e0e0e0; display: none;
+        }
+        .apercu-box.visible { display: block; }
+        .apercu-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: .84rem; }
+        .apercu-row .lbl { color: #6b7280; }
+        .apercu-row .val { font-weight: 700; }
+
+        .btn-ks { background: var(--ks-accent); border: none; color: #fff; padding: 10px 28px; border-radius: 8px; font-weight: 600; }
+        .btn-ks:hover { background: #c0392b; color: #fff; }
+        .btn-ks:disabled { opacity: .5; cursor: not-allowed; }
+
+        
+        /* ── RESPONSIVE MOBILE ── */
+        .hamburger-btn {
+            display: none; position: fixed; top: 12px; left: 12px; z-index: 200;
+            background: var(--ks-accent, #e94560); color: #fff; border: none;
+            border-radius: 10px; width: 40px; height: 40px; font-size: 1.1rem;
+            cursor: pointer; align-items: center; justify-content: center;
+            box-shadow: 0 3px 12px rgba(233,69,96,.4); transition: all .2s;
+        }
+        .hamburger-btn:hover { background: #c0392b; }
+        .sidebar-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,.5); z-index: 150; backdrop-filter: blur(2px);
+        }
+        .sidebar-overlay.active { display: block; }
+        @media (max-width: 768px) {
+            .hamburger-btn { display: flex; }
+            .sidebar { transform: translateX(-100%); transition: transform .3s ease; z-index: 160; width: 240px !important; }
+            .sidebar.open { transform: translateX(0); }
+            .main-content, .main { margin-left: 0 !important; padding: 12px !important; padding-top: 60px !important; }
+            .topbar { flex-wrap: wrap; gap: 8px; padding: 10px 12px 10px 60px !important; }
+            .topbar h5 { font-size: .85rem !important; }
+            .table-responsive { overflow-x: auto; }
+            .fac-table, .rel-table, .ops-table, .pai-table { min-width: 700px; }
+            .stats-row { flex-direction: column; }
+            .stat-mini { min-width: unset !important; }
+            .hide-mobile { display: none !important; }
+            .client-grid { grid-template-columns: 1fr !important; }
+            .cal-cell { min-height: 60px !important; }
+            .filter-bar { flex-wrap: wrap; gap: 8px !important; }
+            .filter-bar .form-select, .filter-bar .form-control { width: 100% !important; }
+            .modal-dialog { margin: 8px !important; max-width: calc(100vw - 16px) !important; }
+            .modal-body { max-height: 70vh; overflow-y: auto; }
+            .row.g-3 > .col-md-3, .row.g-3 > .col-md-4,
+            .row.g-2 > .col-md-4, .row.g-2 > .col-md-7,
+            .row.g-2 > .col-md-5, .row.g-2 > .col-md-8 { flex: 0 0 100%; max-width: 100%; }
+        }
+        @media (max-width: 480px) {
+            .topbar .d-flex { flex-wrap: wrap; }
+            .stat-card .val { font-size: .95rem !important; }
+        } }
+    </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="brand">🎵 KS <span>Production</span><small>Enregistrer paiement</small></div>
+    <nav>
+        <div class="nav-section">Menu</div>
+        <a href="/dashboard" class="nav-link"><i class="bi bi-speedometer2"></i> Dashboard</a>
+        <a href="/factures" class="nav-link"><i class="bi bi-receipt"></i> Factures</a>
+        <a href="/proformas" class="nav-link"><i class="bi bi-file-earmark-text"></i> Proformas</a>
+        <a href="/agenda" class="nav-link"><i class="bi bi-calendar3"></i> Agenda</a>
+        <a href="/operations" class="nav-link"><i class="bi bi-arrow-left-right"></i> Opérations</a>
+        <a href="/clients" class="nav-link"><i class="bi bi-people"></i> Clients</a>
+        <div class="nav-section">Finance</div>
+        <a href="/paiements" class="nav-link active"><i class="bi bi-clock-history"></i> Paiements</a>
+        <a href="/relances" class="nav-link"><i class="bi bi-bell-fill"></i> Relances</a>
+        <a href="/rapport" class="nav-link"><i class="bi bi-bar-chart-line"></i> Rapport</a>
+        {% if role == 'Administrateur' %}
+        <div class="nav-section">Admin</div>
+        <a href="/services" class="nav-link"><i class="bi bi-grid"></i> Services</a>
+        <a href="/utilisateurs" class="nav-link"><i class="bi bi-person-gear"></i> Utilisateurs</a>
+        <a href="/parametres" class="nav-link"><i class="bi bi-gear"></i> Paramètres</a>
+        <a href="/sauvegarde" class="nav-link"><i class="bi bi-cloud-arrow-down"></i> Sauvegarde</a>
+        <a href="/reinitialiser" class="nav-link" style="color:#e74c3c;"><i class="bi bi-arrow-counterclockwise"></i> Réinitialiser</a>
+        {% endif %}
+    </nav>
+    <div class="sidebar-footer">
+        <a href="/profil" class="nav-link"><i class="bi bi-person-circle"></i> Mon Profil</a>
+        <a href="/logout" class="nav-link" style="color:#e74c3c;"><i class="bi bi-box-arrow-left"></i> Déconnexion</a>
+    </div>
+</div>
+
+<button class="hamburger-btn" onclick="toggleSidebar()" id="hamburgerBtn">
+    <i class="bi bi-list" id="hamburgerIcon"></i>
+</button>
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+
+<div class="main-content">
+
+    <div class="topbar">
+        <div>
+            <h5><i class="bi bi-cash-coin me-2" style="color:var(--ks-green);"></i>Enregistrer un paiement</h5>
+            <small class="text-muted">Facture {{ facture.numero }} — {{ facture.nom_client }}</small>
+        </div>
+        <a href="/factures" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Retour
+        </a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show mb-3">
+            {{ message }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endwith %}
+
+    <!-- RECAP -->
+    <div class="recap-facture">
+        <div class="recap-title"><i class="bi bi-receipt me-2"></i>Récapitulatif de la facture</div>
+        <div class="recap-grid">
+            <div class="recap-item">
+                <div class="lbl">N° Facture</div>
+                <div class="val" style="font-size:.9rem;">{{ facture.numero }}</div>
+            </div>
+            <div class="recap-item">
+                <div class="lbl">Client</div>
+                <div class="val" style="font-size:.9rem;">{{ facture.nom_client }}</div>
+            </div>
+            <div class="recap-item">
+                <div class="lbl">Statut</div>
+                <div class="val" style="font-size:.85rem;">
+                    {% if facture.etat_paiement == 'Non Payer' %}
+                        <span style="color:#d63031;">✗ Non Payée</span>
+                    {% else %}
+                        <span style="color:#e17055;">⚡ Paiement partiel</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="recap-item">
+                <div class="lbl">Montant Total</div>
+                <div class="val">{{ montant_ttc }} FCFA</div>
+            </div>
+            <div class="recap-item">
+                <div class="lbl">Déjà payé</div>
+                <div class="val green">{{ montant_paye }} FCFA</div>
+            </div>
+            <div class="recap-item">
+                <div class="lbl">Reste dû</div>
+                <div class="val red">{{ reste_du }} FCFA</div>
+            </div>
+        </div>
+        <div class="progress-zone">
+            {% set pct = ((facture.montant_paye / facture.montant_ttc) * 100) | round(1) if facture.montant_ttc > 0 else 0 %}
+            <div class="progress-label">
+                <span>Progression du paiement</span>
+                <span id="pctDisplay">{{ pct }}%</span>
+            </div>
+            <div class="progress">
+                <div class="progress-bar-custom" id="progressBar" style="width:{{ pct }}%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FORMULAIRE -->
+    <div class="form-card">
+        <div class="form-title"><i class="bi bi-cash-coin me-2" style="color:var(--ks-green);"></i>Nouveau paiement</div>
+
+        <form method="POST" action="/factures/paiement/{{ facture.id }}" id="formPaiement">
+
+            <div class="mb-3">
+                <label class="form-label">Montant à encaisser (FCFA) <span class="text-danger">*</span></label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="bi bi-cash-coin"></i></span>
+                    <input type="text"
+                           class="form-control"
+                           id="montantInput"
+                           placeholder="Ex: 50000"
+                           oninput="updateApercu()"
+                           autocomplete="off">
+                    <input type="hidden" name="montant_paye" id="montantHidden">
+                    <span class="input-group-text">FCFA</span>
+                </div>
+                <div class="montants-rapides">
+                    <button type="button" class="btn-rapide full"
+                            onclick="setMontant({{ facture.reste_du | int }})">
+                        ✓ Tout payer ({{ reste_du }} FCFA)
+                    </button>
+                    {% if facture.reste_du >= 50000 %}
+                    <button type="button" class="btn-rapide" onclick="setMontant(50000)">50 000</button>
+                    {% endif %}
+                    {% if facture.reste_du >= 100000 %}
+                    <button type="button" class="btn-rapide" onclick="setMontant(100000)">100 000</button>
+                    {% endif %}
+                    {% if facture.reste_du >= 200000 %}
+                    <button type="button" class="btn-rapide" onclick="setMontant(200000)">200 000</button>
+                    {% endif %}
+                </div>
+                <small class="text-danger d-none" id="errMsg"></small>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Mode de paiement</label>
+                <select class="form-select" name="mode_paiement">
+                    <option value="Espece">Espèce</option>
+                    <option value="Carte Bancaire">Carte Bancaire</option>
+                    <option value="Virement">Virement</option>
+                    <option value="Mobile Money">Mobile Money</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Notes <small class="text-muted">(optionnel)</small></label>
+                <textarea class="form-control" name="notes" rows="2"
+                          placeholder="Ex: Paiement en 2 tranches, reçu n°..."></textarea>
+            </div>
+
+            <!-- APERÇU -->
+            <div class="apercu-box" id="apercuBox">
+                <div style="font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#6b7280; margin-bottom:10px;">
+                    Aperçu après paiement
+                </div>
+                <div class="apercu-row">
+                    <span class="lbl">Montant encaissé</span>
+                    <span class="val" style="color:var(--ks-green);" id="apMontant">—</span>
+                </div>
+                <div class="apercu-row">
+                    <span class="lbl">Total payé</span>
+                    <span class="val" id="apTotalPaye">—</span>
+                </div>
+                <div class="apercu-row" id="apResteRow">
+                    <span class="lbl">Nouveau reste dû</span>
+                    <span class="val" style="color:var(--ks-accent);" id="apReste">—</span>
+                </div>
+                <div class="apercu-row" style="margin-top:8px; padding-top:8px; border-top:1px solid #e5e7eb;">
+                    <span class="lbl">Nouveau statut</span>
+                    <span class="val" id="apStatut">—</span>
+                </div>
+            </div>
+
+            <div class="d-flex gap-3 mt-4">
+                <button type="submit" class="btn btn-ks" id="btnSubmit" disabled>
+                    <i class="bi bi-check-lg me-2"></i>Valider le paiement
+                </button>
+                <a href="/factures" class="btn btn-outline-secondary px-4">
+                    <i class="bi bi-x-lg me-2"></i>Annuler
+                </a>
+            </div>
+
+        </form>
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const resteDu      = {{ facture.reste_du }};
+    const montantPaye  = {{ facture.montant_paye }};
+    const montantTotal = {{ facture.montant_ttc }};
+
+    function setMontant(val) {
+        document.getElementById('montantInput').value = val.toLocaleString('fr-FR');
+        updateApercu();
+    }
+
+    function getMontant() {
+        // Nettoyer la valeur : enlever espaces, points, virgules de séparation
+        const raw = document.getElementById('montantInput').value
+            .replace(/\s/g, '')
+            .replace(/\./g, '')
+            .replace(/,/g, '.');
+        return parseFloat(raw) || 0;
+    }
+
+    function formatNum(n) {
+        return Math.round(n).toLocaleString('fr-FR') + ' FCFA';
+    }
+
+    function updateApercu() {
+        const input  = getMontant();
+        const box    = document.getElementById('apercuBox');
+        const btn    = document.getElementById('btnSubmit');
+        const err    = document.getElementById('errMsg');
+
+        // Validation
+        if (input <= 0) {
+            box.classList.remove('visible');
+            btn.disabled = true;
+            err.classList.add('d-none');
+            return;
+        }
+
+        if (input > resteDu) {
+            box.classList.remove('visible');
+            btn.disabled = true;
+            err.textContent = `Le montant ne peut pas dépasser le reste dû (${Math.round(resteDu).toLocaleString('fr-FR')} FCFA)`;
+            err.classList.remove('d-none');
+            return;
+        }
+
+        err.classList.add('d-none');
+        box.classList.add('visible');
+        btn.disabled = false;
+
+        // Mettre à jour le champ caché pour le formulaire
+        document.getElementById('montantHidden').value = input;
+
+        const nouveauReste     = resteDu - input;
+        const nouveauTotalPaye = montantPaye + input;
+        const pct              = Math.round((nouveauTotalPaye / montantTotal) * 100);
+
+        document.getElementById('apMontant').textContent   = formatNum(input);
+        document.getElementById('apTotalPaye').textContent = formatNum(nouveauTotalPaye);
+        document.getElementById('apReste').textContent     = formatNum(nouveauReste);
+        document.getElementById('pctDisplay').textContent  = pct + '%';
+        document.getElementById('progressBar').style.width = pct + '%';
+
+        const statutEl = document.getElementById('apStatut');
+        const resteRow = document.getElementById('apResteRow');
+        if (nouveauReste <= 0) {
+            statutEl.textContent = '✓ PAYÉE';
+            statutEl.style.color = '#00b894';
+            resteRow.style.display = 'none';
+        } else {
+            statutEl.textContent = '⚡ Paiement partiel';
+            statutEl.style.color = '#e17055';
+            resteRow.style.display = 'flex';
+        }
+    }
+
+    // Validation avant soumission
+    document.getElementById('formPaiement').addEventListener('submit', function(e) {
+        const input = getMontant();
+        if (input <= 0 || input > resteDu) {
+            e.preventDefault();
+            alert('Veuillez saisir un montant valide.');
+            return;
+        }
+        document.getElementById('montantHidden').value = input;
+    });
+</script>
+<script>
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const icon    = document.getElementById('hamburgerIcon');
+    const isOpen  = sidebar.classList.contains('open');
+    if (isOpen) {
+        sidebar.classList.remove('open'); overlay.classList.remove('active'); icon.className = 'bi bi-list';
+    } else {
+        sidebar.classList.add('open'); overlay.classList.add('active'); icon.className = 'bi bi-x-lg';
+    }
+}
+function closeSidebar() {
+    document.querySelector('.sidebar').classList.remove('open');
+    document.getElementById('sidebarOverlay').classList.remove('active');
+    document.getElementById('hamburgerIcon').className = 'bi bi-list';
+}
+window.addEventListener('resize', () => { if (window.innerWidth > 768) closeSidebar(); });
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.sidebar .nav-link').forEach(l => {
+        l.addEventListener('click', () => { if (window.innerWidth <= 768) closeSidebar(); });
+    });
+});
+</script>
+    <!-- Service Worker PWA -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/service-worker.js')
+            .then(reg => console.log('SW enregistré:', reg.scope))
+            .catch(err => console.log('SW erreur:', err));
+        });
+      }
+    </script>
+</body>
+</html>
