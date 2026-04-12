@@ -2984,9 +2984,8 @@ Cordialement,
     return jsonify({'ok': True, 'message': message.replace(',', ' ').replace(',,', ',')})
 
 
+with app.app_context():
+    initialiser_base()
+
 if __name__ == '__main__':
-    with app.app_context():
-        initialiser_base()
-    app.run(debug=True)
-
-
+    app.run(debug=False)
