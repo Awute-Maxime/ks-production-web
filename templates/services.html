@@ -18,7 +18,7 @@
         .brand { color: #fff; font-size: .95rem; font-weight: 700; padding: 14px 16px 12px; border-bottom: 1px solid rgba(255,255,255,.1); }
         .brand span { color: var(--ks-accent); }
         .brand small { display: block; font-size: .58rem; color: rgba(255,255,255,.3); font-weight: 400; }
-        .sidebar nav { flex: 1; padding: 8px 0; }
+        .sidebar nav { flex: 1; padding: 8px 0; overflow-y: auto; }
         .nav-section { font-size: .58rem; text-transform: uppercase; letter-spacing: .1em; color: rgba(255,255,255,.28); padding: 10px 16px 3px; font-weight: 600; }
         .nav-link { color: #aab4c4; padding: 8px 16px; display: flex; align-items: center; gap: 8px; font-size: .8rem; transition: all .2s; }
         .nav-link:hover, .nav-link.active { color: #fff; background: var(--ks-accent); border-radius: 8px; margin: 0 6px; padding: 8px 10px; }
@@ -51,16 +51,12 @@
         .section-header .s-count { font-size: .72rem; opacity: .75; }
 
         /* TABLE */
-        .svc-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+        .svc-table { width: 100%; border-collapse: collapse; }
         .svc-table thead th {
             background: #f8f9fa; color: #6b7280; font-size: .68rem;
             text-transform: uppercase; letter-spacing: .06em;
             padding: 9px 16px; font-weight: 600; border: none;
         }
-        .svc-table thead th:nth-child(1) { width: 50%; }
-        .svc-table thead th:nth-child(2) { width: 20%; }
-        .svc-table thead th:nth-child(3) { width: 18%; }
-        .svc-table thead th:nth-child(4) { width: 12%; }
         .svc-table tbody tr { border-bottom: 1px solid #f3f4f6; transition: background .15s; }
         .svc-table tbody tr:last-child { border-bottom: none; }
         .svc-table tbody tr:hover { background: #f8f9fe; }
@@ -113,6 +109,12 @@
             background: rgba(0,0,0,.5); z-index: 150; backdrop-filter: blur(2px);
         }
         .sidebar-overlay.active { display: block; }
+        
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .sidebar { width: 180px; }
+            .main-content, .main { margin-left: 180px; }
+            .topbar h5 { font-size: .85rem; }
+        }
         @media (max-width: 768px) {
             .hamburger-btn { display: flex; }
             .sidebar { transform: translateX(-100%); transition: transform .3s ease; z-index: 160; width: 240px !important; }
@@ -508,5 +510,24 @@ function initBadgeAlertes() {
 }
 document.addEventListener('DOMContentLoaded', initBadgeAlertes);
 </script>
+
+    <script>
+    function toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const icon    = document.getElementById('hamburgerIcon');
+        sidebar.classList.toggle('open');
+        overlay.classList.toggle('active');
+        if (icon) icon.className = sidebar.classList.contains('open') ? 'bi bi-x-lg' : 'bi bi-list';
+    }
+    function closeSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        const icon    = document.getElementById('hamburgerIcon');
+        sidebar.classList.remove('open');
+        overlay.classList.remove('active');
+        if (icon) icon.className = 'bi bi-list';
+    }
+    </script>
 </body>
 </html>
